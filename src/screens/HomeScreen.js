@@ -8,9 +8,45 @@ import {
 } from "react-native";
 import { useAuth } from "../AuthContext";
 import { MaterialIcons } from "@expo/vector-icons";
+import {
+  calculatePortfolioSummary,
+  getRecentTransactions,
+} from "../data/mockData";
 
 const HomeScreen = ({ navigation }) => {
   const { profile } = useAuth();
+  const portfolioSummary = calculatePortfolioSummary();
+  const recentTransactions = getRecentTransactions(2);
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffHours < 24) {
+      return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
+    } else {
+      return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
+    }
+  };
+
+  const getTransactionIcon = (type) => {
+    return type === "buy" ? "arrow-upward" : "arrow-downward";
+  };
+
+  const getTransactionColor = (type) => {
+    return type === "buy" ? "#4CAF50" : "#f44336";
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -26,13 +62,35 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <MaterialIcons name="attach-money" size={30} color="#4CAF50" />
-          <Text style={styles.statValue}>$125,430.75</Text>
+          <Text style={styles.statValue}>
+            {formatCurrency(portfolioSummary.totalValue)}
+          </Text>
           <Text style={styles.statLabel}>Total Portfolio Value</Text>
         </View>
 
         <View style={styles.statCard}>
-          <MaterialIcons name="trending-up" size={30} color="#4CAF50" />
-          <Text style={styles.statValue}>+$12,560.25</Text>
+          <MaterialIcons
+            name={
+              portfolioSummary.totalProfitLoss >= 0
+                ? "trending-up"
+                : "trending-down"
+            }
+            size={30}
+            color={
+              portfolioSummary.totalProfitLoss >= 0 ? "#4CAF50" : "#f44336"
+            }
+          />
+          <Text
+            style={[
+              styles.statValue,
+              {
+                color:
+                  portfolioSummary.totalProfitLoss >= 0 ? "#4CAF50" : "#f44336",
+              },
+            ]}
+          >
+            {formatCurrency(portfolioSummary.totalProfitLoss)}
+          </Text>
           <Text style={styles.statLabel}>Total Profit/Loss</Text>
         </View>
       </View>
@@ -60,16 +118,22 @@ const HomeScreen = ({ navigation }) => {
 
       <View style={styles.recentSection}>
         <Text style={styles.sectionTitle}>Recent Activity</Text>
-        <View style={styles.activityItem}>
-          <MaterialIcons name="arrow-upward" size={20} color="#4CAF50" />
-          <Text style={styles.activityText}>Bought 10 AAPL shares</Text>
-          <Text style={styles.activityTime}>2 hours ago</Text>
-        </View>
-        <View style={styles.activityItem}>
-          <MaterialIcons name="arrow-downward" size={20} color="#f44336" />
-          <Text style={styles.activityText}>Sold 5 GOOGL shares</Text>
-          <Text style={styles.activityTime}>1 day ago</Text>
-        </View>
+        {recentTransactions.map((transaction) => (
+          <View key={transaction.id} style={styles.activityItem}>
+            <MaterialIcons
+              name={getTransactionIcon(transaction.transaction_type)}
+              size={20}
+              color={getTransactionColor(transaction.transaction_type)}
+            />
+            <Text style={styles.activityText}>
+              {transaction.transaction_type === "buy" ? "Bought" : "Sold"}{" "}
+              {transaction.quantity} {transaction.asset?.symbol || "shares"}
+            </Text>
+            <Text style={styles.activityTime}>
+              {formatTimeAgo(transaction.transaction_date)}
+            </Text>
+          </View>
+        ))}
       </View>
     </ScrollView>
   );

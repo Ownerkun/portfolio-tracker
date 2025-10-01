@@ -435,7 +435,7 @@ export const mockTransactions: Transaction[] = [
     user_id: 'user-123-456-789',
     asset_id: 'asset-2',
     transaction_type: 'sell',
-    quantity: 0, // Sold 0 shares for now (adjust if needed)
+    quantity: 1, // Sold 0 shares for now (adjust if needed)
     price_per_unit: 140.50,
     total_amount: 0,
     transaction_date: '2024-09-01T11:00:00Z',
