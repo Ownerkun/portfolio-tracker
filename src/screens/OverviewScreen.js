@@ -1,29 +1,13 @@
 import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useAuth } from "../AuthContext";
-import { MaterialIcons } from "@expo/vector-icons";
-import {
-  calculatePortfolioSummary,
-  enrichedMockAssets,
-} from "../data/mockData";
+import { enrichedMockAssets } from "../data/mockData";
+import PortfolioStats from "../components/PortfolioStats";
 import AssetAllocationChart from "../components/AssetAllocationChart";
 import AssetCard from "../components/AssetCard";
 
 const OverviewScreen = ({ navigation }) => {
   const { profile } = useAuth();
-  const portfolioSummary = calculatePortfolioSummary();
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-    }).format(amount);
-  };
-
-  const formatPercentage = (value) => {
-    return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
-  };
 
   const handleAssetPress = (asset) => {
     navigation.navigate("AssetDetail", { asset });
@@ -43,56 +27,7 @@ const OverviewScreen = ({ navigation }) => {
 
       <ScrollView style={styles.scrollContent}>
         {/* Portfolio Summary Cards */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <MaterialIcons name="attach-money" size={30} color="#4CAF50" />
-            <Text style={styles.statValue}>
-              {formatCurrency(portfolioSummary.totalValue)}
-            </Text>
-            <Text style={styles.statLabel}>Total Portfolio Value</Text>
-          </View>
-
-          <View style={styles.statCard}>
-            <MaterialIcons
-              name={
-                portfolioSummary.totalProfitLoss >= 0
-                  ? "trending-up"
-                  : "trending-down"
-              }
-              size={30}
-              color={
-                portfolioSummary.totalProfitLoss >= 0 ? "#4CAF50" : "#f44336"
-              }
-            />
-            <Text
-              style={[
-                styles.statValue,
-                {
-                  color:
-                    portfolioSummary.totalProfitLoss >= 0
-                      ? "#4CAF50"
-                      : "#f44336",
-                },
-              ]}
-            >
-              {formatCurrency(portfolioSummary.totalProfitLoss)}
-            </Text>
-            <Text style={styles.statLabel}>Total P&L</Text>
-            <Text
-              style={[
-                styles.statPercentage,
-                {
-                  color:
-                    portfolioSummary.totalProfitLoss >= 0
-                      ? "#4CAF50"
-                      : "#f44336",
-                },
-              ]}
-            >
-              {formatPercentage(portfolioSummary.totalProfitLossPercentage)}
-            </Text>
-          </View>
-        </View>
+        <PortfolioStats />
 
         {/* Asset Allocation */}
         <View style={styles.section}>
@@ -142,39 +77,6 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     fontSize: 16,
-    color: "#666",
-    marginTop: 5,
-  },
-  statsContainer: {
-    flexDirection: "row",
-    padding: 20,
-    paddingTop: 10,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 12,
-    marginHorizontal: 5,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginTop: 10,
-  },
-  statPercentage: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginTop: 5,
-  },
-  statLabel: {
-    fontSize: 12,
     color: "#666",
     marginTop: 5,
   },
