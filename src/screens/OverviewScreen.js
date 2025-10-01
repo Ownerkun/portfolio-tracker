@@ -2,9 +2,9 @@ import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useAuth } from "../AuthContext";
 import { enrichedMockAssets } from "../data/mockData";
-import PortfolioStats from "../components/PortfolioStats";
-import AssetAllocationChart from "../components/AssetAllocationChart";
-import AssetCard from "../components/AssetCard";
+import PortfolioStats from "../components/overview/PortfolioStats";
+import AssetAllocationChart from "../components/overview/AssetAllocationChart";
+import AssetCard from "../components/overview/AssetCard";
 
 const OverviewScreen = ({ navigation }) => {
   const { profile } = useAuth();

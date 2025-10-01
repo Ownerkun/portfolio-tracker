@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { ScrollView, Modal, TextInput, Alert } from "react-native";
 import { mockTransactions } from "../../data/mockData";
-import TransactionList from "../../components/TransactionList";
-import TransactionModal from "../../components/TransactionModal";
+import TransactionList from "../../components/transaction/TransactionList";
+import TransactionModal from "../../components/transaction/TransactionModal";
 
 const AssetDetailScreen = ({ route }) => {
   const { asset } = route.params;

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { PieChart } from "react-native-chart-kit";
-import { enrichedMockAssets, mockAssetTypes } from "../data/mockData";
+import { enrichedMockAssets, mockAssetTypes } from "../../data/mockData";
 
 const AssetAllocationChart = () => {
   const calculateAllocationData = () => {

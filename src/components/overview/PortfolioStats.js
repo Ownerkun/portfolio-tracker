@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import PortfolioSummaryCard from "./PortfolioSummaryCard";
-import { calculatePortfolioSummary } from "../data/mockData";
+import { calculatePortfolioSummary } from "../../data/mockData";
 
 const PortfolioStats = () => {
   const portfolioSummary = calculatePortfolioSummary();
