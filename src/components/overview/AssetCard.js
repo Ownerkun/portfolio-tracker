@@ -36,58 +36,59 @@ const AssetCard = ({ asset, onPress }) => {
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
-      <View style={styles.cardHeader}>
-        <View style={styles.assetInfo}>
+      {/* Single Row Layout */}
+      <View style={styles.row}>
+        {/* Asset Icon */}
+        <View style={styles.iconColumn}>
           <Text style={styles.assetIcon}>
             {getAssetIcon(asset.asset_type?.name)}
           </Text>
-          <View>
-            <Text style={styles.symbol}>{asset.symbol}</Text>
-            <Text style={styles.name}>{asset.name}</Text>
-          </View>
         </View>
-        <View style={styles.values}>
-          <Text style={styles.totalValue}>
-            {formatCurrency(asset.total_value || 0)}
-          </Text>
-          <Text style={styles.quantity}>
-            {asset.quantity}{" "}
-            {asset.asset_type?.name === "Cryptocurrency" ? "coins" : "shares"}
-          </Text>
-        </View>
-      </View>
 
-      <View style={styles.details}>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Avg. Buy Price:</Text>
-          <Text style={styles.detailValue}>
-            {formatCurrency(asset.average_buy_price)}
-          </Text>
+        {/* Symbol */}
+        <View style={styles.symbolColumn}>
+          <Text style={styles.symbol}>{asset.symbol}</Text>
         </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Current Price:</Text>
-          <Text style={styles.detailValue}>
+
+        {/* Current Price */}
+        <View style={styles.priceColumn}>
+          <Text style={styles.currentPrice}>
             {formatCurrency(asset.current_price || 0)}
           </Text>
         </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>P&L:</Text>
+
+        {/* Profit/Loss */}
+        <View style={styles.plColumn}>
           <View style={styles.plContainer}>
             <MaterialIcons
               name={asset.profit_loss >= 0 ? "trending-up" : "trending-down"}
               size={16}
               color={asset.profit_loss >= 0 ? "#4CAF50" : "#f44336"}
             />
-            <Text
-              style={[
-                styles.plValue,
-                { color: asset.profit_loss >= 0 ? "#4CAF50" : "#f44336" },
-              ]}
-            >
-              {formatCurrency(asset.profit_loss || 0)} (
-              {formatPercentage(asset.profit_loss_percentage || 0)})
-            </Text>
+            <View style={styles.plTextContainer}>
+              <Text
+                style={[
+                  styles.plAmount,
+                  { color: asset.profit_loss >= 0 ? "#4CAF50" : "#f44336" },
+                ]}
+              >
+                {formatCurrency(asset.profit_loss || 0)}
+              </Text>
+              <Text
+                style={[
+                  styles.plPercentage,
+                  { color: asset.profit_loss >= 0 ? "#4CAF50" : "#f44336" },
+                ]}
+              >
+                {formatPercentage(asset.profit_loss_percentage || 0)}
+              </Text>
+            </View>
           </View>
+        </View>
+
+        {/* Chevron */}
+        <View style={styles.chevronColumn}>
+          <MaterialIcons name="chevron-right" size={20} color="#999" />
         </View>
       </View>
     </TouchableOpacity>
@@ -98,74 +99,64 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
     padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#f0f0f0",
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
   },
-  cardHeader: {
+  row: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
   },
-  assetInfo: {
-    flexDirection: "row",
+  iconColumn: {
+    width: 40,
     alignItems: "center",
-    flex: 1,
   },
   assetIcon: {
-    fontSize: 24,
-    marginRight: 12,
+    fontSize: 20,
+  },
+  symbolColumn: {
+    flex: 1,
+    marginLeft: 12,
   },
   symbol: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
   },
-  name: {
-    fontSize: 12,
-    color: "#666",
-  },
-  values: {
+  priceColumn: {
+    width: 80,
     alignItems: "flex-end",
   },
-  totalValue: {
-    fontSize: 16,
-    fontWeight: "bold",
+  currentPrice: {
+    fontSize: 14,
+    fontWeight: "600",
     color: "#333",
   },
-  quantity: {
-    fontSize: 12,
-    color: "#666",
-  },
-  details: {
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
-    paddingTop: 12,
-  },
-  detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  detailLabel: {
-    fontSize: 12,
-    color: "#666",
-  },
-  detailValue: {
-    fontSize: 12,
-    fontWeight: "600",
+  plColumn: {
+    width: 100,
+    alignItems: "flex-end",
+    marginRight: 8,
   },
   plContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
-  plValue: {
+  plTextContainer: {
+    marginLeft: 4,
+    alignItems: "flex-end",
+  },
+  plAmount: {
     fontSize: 12,
     fontWeight: "600",
-    marginLeft: 4,
+  },
+  plPercentage: {
+    fontSize: 10,
+    fontWeight: "500",
+  },
+  chevronColumn: {
+    width: 20,
+    alignItems: "center",
   },
 });
 

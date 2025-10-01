@@ -44,6 +44,14 @@ const OverviewScreen = ({ navigation }) => {
             </Text>
           </View>
 
+          {/* Assets List Header */}
+          <View style={styles.assetsHeader}>
+            <Text style={styles.headerLabel}>Asset</Text>
+            <Text style={styles.headerLabel}>Price</Text>
+            <Text style={styles.headerLabel}>P&L</Text>
+          </View>
+
+          {/* Simplified Asset Cards */}
           {enrichedMockAssets.map((asset) => (
             <AssetCard
               key={asset.id}
@@ -106,6 +114,21 @@ const styles = StyleSheet.create({
   assetCount: {
     fontSize: 14,
     color: "#666",
+  },
+  assetsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  headerLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#666",
+    textTransform: "uppercase",
   },
 });
 
