@@ -13,10 +13,8 @@ import RegisterScreen from "../screens/auth/RegisterScreen";
 import ForgetPasswordScreen from "../screens/auth/ForgetPasswordScreen";
 
 // Portfolio Screens
-import HomeScreen from "../screens/HomeScreen";
-import PortfolioScreen from "../screens/portfolio/PortfolioScreen";
-import AssetsScreen from "../screens/asset/AssetScreen";
-import TransactionsScreen from "../screens/transaction/TransactionScreen";
+import OverviewScreen from "../screens/OverviewScreen";
+import AssetDetailScreen from "../screens/asset/AssetDetailScreen";
 import ProfileScreen from "../screens/profile/ProfileScreen";
 
 const Tab = createBottomTabNavigator();
@@ -27,6 +25,15 @@ const AuthenticatedStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Main" component={MainTabNavigator} />
+      <Stack.Screen
+        name="AssetDetail"
+        component={AssetDetailScreen}
+        options={{
+          headerShown: true,
+          title: "Asset Details",
+          headerBackTitle: "Back",
+        }}
+      />
       <Stack.Screen name="ForgetPassword" component={ForgetPasswordScreen} />
     </Stack.Navigator>
   );
@@ -46,40 +53,13 @@ const MainTabNavigator = () => {
       }}
     >
       <Tab.Screen
-        name="Home"
-        component={HomeScreen}
+        name="Overview"
+        component={OverviewScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="dashboard" color={color} size={size} />
           ),
-          title: "Dashboard",
-        }}
-      />
-      <Tab.Screen
-        name="Portfolio"
-        component={PortfolioScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="pie-chart" color={color} size={size} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Assets"
-        component={AssetsScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="attach-money" color={color} size={size} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Transactions"
-        component={TransactionsScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="list-alt" color={color} size={size} />
-          ),
+          title: "Overview",
         }}
       />
       <Tab.Screen
