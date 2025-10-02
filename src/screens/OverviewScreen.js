@@ -1,5 +1,6 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+// OverviewScreen.js (updated)
+import React, { useState } from "react";
+import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
 import { useAuth } from "../AuthContext";
 import { enrichedMockAssets } from "../data/mockData";
 import PortfolioStats from "../components/overview/PortfolioStats";
@@ -9,6 +10,7 @@ import AddAssetButton from "../components/overview/AddAssetButton";
 
 const OverviewScreen = ({ navigation }) => {
   const { profile } = useAuth();
+  const [assets, setAssets] = useState(enrichedMockAssets);
 
   const handleAssetPress = (asset) => {
     navigation.navigate("AssetDetail", { asset });
@@ -16,6 +18,31 @@ const OverviewScreen = ({ navigation }) => {
 
   const handleAddAsset = () => {
     navigation.navigate("AddAsset");
+  };
+
+  const handleViewTransactions = (asset) => {
+    // Navigate to AssetDetail screen which shows transactions
+    navigation.navigate("AssetDetail", { asset });
+  };
+
+  const handleAddTransaction = (asset) => {
+    // Navigate to AssetDetail screen and open add transaction modal
+    navigation.navigate("AssetDetail", {
+      asset,
+      openTransactionModal: true,
+    });
+  };
+
+  const handleRemoveAsset = (assetId) => {
+    // Remove asset from the list
+    setAssets(assets.filter((asset) => asset.id !== assetId));
+
+    // Show success message
+    Alert.alert(
+      "Asset Removed",
+      "The asset has been removed from your portfolio.",
+      [{ text: "OK" }]
+    );
   };
 
   return (
@@ -48,11 +75,14 @@ const OverviewScreen = ({ navigation }) => {
           </View>
 
           {/* Assets List */}
-          {enrichedMockAssets.map((asset) => (
+          {assets.map((asset) => (
             <AssetCard
               key={asset.id}
               asset={asset}
               onPress={() => handleAssetPress(asset)}
+              onViewTransactions={handleViewTransactions}
+              onAddTransaction={handleAddTransaction}
+              onRemoveAsset={handleRemoveAsset}
             />
           ))}
         </View>
@@ -110,11 +140,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#1A1A1A",
     letterSpacing: -0.3,
-  },
-  assetCount: {
-    fontSize: 15,
-    color: "#6C757D",
-    fontWeight: "500",
   },
   bottomSpacing: {
     height: 20,

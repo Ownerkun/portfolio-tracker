@@ -1,8 +1,15 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import ThreeDotMenu from "./ThreeDotMenu";
 
-const AssetCard = ({ asset, onPress }) => {
+const AssetCard = ({
+  asset,
+  onPress,
+  onViewTransactions,
+  onAddTransaction,
+  onRemoveAsset,
+}) => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -41,6 +48,29 @@ const AssetCard = ({ asset, onPress }) => {
 
   const assetColor = getAssetColor(asset.asset_type?.name);
   const isProfitable = asset.profit_loss >= 0;
+
+  const handleViewTransactions = () => {
+    onViewTransactions(asset);
+  };
+
+  const handleAddTransaction = () => {
+    onAddTransaction(asset);
+  };
+
+  const handleRemoveAsset = () => {
+    Alert.alert(
+      "Remove Asset",
+      `Are you sure you want to remove ${asset.symbol} from your portfolio?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => onRemoveAsset(asset.id),
+        },
+      ]
+    );
+  };
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
@@ -91,8 +121,13 @@ const AssetCard = ({ asset, onPress }) => {
           </View>
         </View>
 
-        {/* Chevron */}
-        <MaterialIcons name="chevron-right" size={20} color="#CED4DA" />
+        {/* Three Dot Menu */}
+        <ThreeDotMenu
+          asset={asset}
+          onViewTransactions={handleViewTransactions}
+          onAddTransaction={handleAddTransaction}
+          onRemoveAsset={handleRemoveAsset}
+        />
       </View>
     </TouchableOpacity>
   );
