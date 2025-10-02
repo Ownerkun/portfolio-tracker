@@ -15,6 +15,7 @@ import ForgetPasswordScreen from "../screens/auth/ForgetPasswordScreen";
 import OverviewScreen from "../screens/OverviewScreen";
 import AssetDetailScreen from "../screens/asset/AssetDetailScreen";
 import ProfileScreen from "../screens/profile/ProfileScreen";
+import AddAssetScreen from "../screens/asset/AddAssetScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -33,7 +34,15 @@ const AuthenticatedStack = () => {
           headerBackTitle: "Back",
         }}
       />
-      <Stack.Screen name="ForgetPassword" component={ForgetPasswordScreen} />
+      <Stack.Screen
+        name="AddAsset"
+        component={AddAssetScreen}
+        options={{
+          headerShown: true,
+          title: "Add Asset",
+          headerBackTitle: "Back",
+        }}
+      />
     </Stack.Navigator>
   );
 };

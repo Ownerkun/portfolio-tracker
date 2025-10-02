@@ -5,12 +5,17 @@ import { enrichedMockAssets } from "../data/mockData";
 import PortfolioStats from "../components/overview/PortfolioStats";
 import AssetAllocationChart from "../components/overview/AssetAllocationChart";
 import AssetCard from "../components/overview/AssetCard";
+import AddAssetButton from "../components/overview/AddAssetButton";
 
 const OverviewScreen = ({ navigation }) => {
   const { profile } = useAuth();
 
   const handleAssetPress = (asset) => {
     navigation.navigate("AssetDetail", { asset });
+  };
+
+  const handleAddAsset = () => {
+    navigation.navigate("AddAsset");
   };
 
   return (
@@ -38,7 +43,8 @@ const OverviewScreen = ({ navigation }) => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Holdings</Text>
-            <Text style={styles.assetCount}>{enrichedMockAssets.length}</Text>
+            {/* Add Asset Button */}
+            <AddAssetButton onPress={handleAddAsset} />
           </View>
 
           {/* Assets List */}
