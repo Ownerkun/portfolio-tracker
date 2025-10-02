@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { View, ActivityIndicator } from "react-native";
-import SearchBar from "../../components/asset/SearchBar";
-import AssetList from "../../components/asset/AssetList";
-import AddButton from "../../components/asset/AddButton";
-import styles from "../../components/asset/AddAssetScreen.styles";
+import SearchBar from "../../components/addAsset/SearchBar";
+import AssetList from "../../components/addAsset/AssetList";
+import AddButton from "../../components/addAsset/AddButton";
+import styles from "../../components/addAsset/AddAssetScreen.styles";
 
 // Mock data for available assets - this will be replaced with API call
 const mockAvailableAssets = [
