@@ -8,8 +8,9 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  TextInput,
 } from "react-native";
-import { TextInput, ActivityIndicator } from "react-native-paper";
+import { ActivityIndicator } from "react-native-paper";
 import { useAuth } from "../../AuthContext";
 import { MaterialIcons } from "@expo/vector-icons";
 
@@ -19,6 +20,8 @@ const RegisterScreen = ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { signUp } = useAuth();
 
   const handleRegister = async () => {
@@ -56,57 +59,131 @@ const RegisterScreen = ({ navigation }) => {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
-          <MaterialIcons name="trending-up" size={60} color="#6200EA" />
+          <View style={styles.iconContainer}>
+            <MaterialIcons name="trending-up" size={48} color="#3B82F6" />
+          </View>
           <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Start tracking your portfolio</Text>
+          <Text style={styles.subtitle}>
+            Start tracking your portfolio today
+          </Text>
         </View>
 
         <View style={styles.formContainer}>
-          <TextInput
-            label="Username"
-            mode="outlined"
-            style={styles.input}
-            value={username}
-            onChangeText={setUsername}
-            disabled={loading}
-            left={<TextInput.Icon icon="account" />}
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Username</Text>
+            <View style={styles.inputWrapper}>
+              <MaterialIcons
+                name="person"
+                size={20}
+                color="#6C757D"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your username"
+                value={username}
+                onChangeText={setUsername}
+                editable={!loading}
+                placeholderTextColor="#ADB5BD"
+              />
+            </View>
+          </View>
 
-          <TextInput
-            label="Email"
-            mode="outlined"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            disabled={loading}
-            left={<TextInput.Icon icon="email" />}
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Email</Text>
+            <View style={styles.inputWrapper}>
+              <MaterialIcons
+                name="email"
+                size={20}
+                color="#6C757D"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your email"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
+                editable={!loading}
+                placeholderTextColor="#ADB5BD"
+              />
+            </View>
+          </View>
 
-          <TextInput
-            label="Password"
-            mode="outlined"
-            secureTextEntry
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            disabled={loading}
-            left={<TextInput.Icon icon="lock" />}
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Password</Text>
+            <View style={styles.inputWrapper}>
+              <MaterialIcons
+                name="lock"
+                size={20}
+                color="#6C757D"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Create a password"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+                editable={!loading}
+                placeholderTextColor="#ADB5BD"
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeIcon}
+              >
+                <MaterialIcons
+                  name={showPassword ? "visibility" : "visibility-off"}
+                  size={20}
+                  color="#6C757D"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
 
-          <TextInput
-            label="Confirm Password"
-            mode="outlined"
-            secureTextEntry
-            style={styles.input}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            disabled={loading}
-            left={<TextInput.Icon icon="lock-check" />}
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Confirm Password</Text>
+            <View style={styles.inputWrapper}>
+              <MaterialIcons
+                name="lock-check"
+                size={20}
+                color="#6C757D"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Confirm your password"
+                secureTextEntry={!showConfirmPassword}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                editable={!loading}
+                placeholderTextColor="#ADB5BD"
+              />
+              <TouchableOpacity
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={styles.eyeIcon}
+              >
+                <MaterialIcons
+                  name={showConfirmPassword ? "visibility" : "visibility-off"}
+                  size={20}
+                  color="#6C757D"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.passwordHint}>
+            <MaterialIcons name="info" size={16} color="#6C757D" />
+            <Text style={styles.passwordHintText}>
+              Password must be at least 6 characters
+            </Text>
+          </View>
 
           <TouchableOpacity
             style={[
@@ -115,23 +192,24 @@ const RegisterScreen = ({ navigation }) => {
             ]}
             onPress={handleRegister}
             disabled={loading}
+            activeOpacity={0.7}
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.registerButtonText}>Sign Up</Text>
+              <Text style={styles.registerButtonText}>Create Account</Text>
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.switchModeButton}
-            onPress={() => navigation.navigate("Login")}
-            disabled={loading}
-          >
-            <Text style={styles.switchModeText}>
-              Already have an account? Sign In
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Already have an account? </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Login")}
+              disabled={loading}
+            >
+              <Text style={styles.footerLink}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -141,7 +219,7 @@ const RegisterScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#F8F9FA",
   },
   scrollContainer: {
     flexGrow: 1,
@@ -152,56 +230,109 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 40,
   },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    backgroundColor: "#3B82F615",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
   title: {
     fontSize: 32,
-    fontWeight: "bold",
-    color: "#333",
-    marginTop: 10,
-    marginBottom: 5,
+    fontWeight: "700",
+    color: "#1A1A1A",
+    marginBottom: 8,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
-    color: "#666",
+    fontSize: 15,
+    color: "#6C757D",
     textAlign: "center",
+    fontWeight: "500",
   },
   formContainer: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: "#FFFFFF",
+    padding: 24,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E9ECEF",
   },
-  input: {
-    marginBottom: 16,
-    backgroundColor: "#fff",
-  },
-  registerButton: {
-    backgroundColor: "#6200EA",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 10,
+  inputGroup: {
     marginBottom: 20,
   },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1A1A1A",
+    marginBottom: 8,
+    letterSpacing: -0.1,
+  },
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E9ECEF",
+    borderRadius: 10,
+    backgroundColor: "#F8F9FA",
+    paddingHorizontal: 14,
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 14,
+    fontSize: 15,
+    color: "#1A1A1A",
+  },
+  eyeIcon: {
+    padding: 4,
+  },
+  passwordHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F8F9FA",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 24,
+  },
+  passwordHintText: {
+    fontSize: 13,
+    color: "#6C757D",
+    marginLeft: 8,
+    fontWeight: "500",
+  },
+  registerButton: {
+    backgroundColor: "#3B82F6",
+    padding: 16,
+    borderRadius: 10,
+    alignItems: "center",
+  },
   registerButtonDisabled: {
-    backgroundColor: "#ccc",
+    backgroundColor: "#ADB5BD",
   },
   registerButtonText: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "600",
+    letterSpacing: -0.2,
   },
-  switchModeButton: {
+  footer: {
+    flexDirection: "row",
     alignItems: "center",
-    padding: 10,
+    justifyContent: "center",
+    marginTop: 24,
   },
-  switchModeText: {
-    color: "#6200EA",
+  footerText: {
     fontSize: 14,
-    fontWeight: "500",
+    color: "#6C757D",
+  },
+  footerLink: {
+    fontSize: 14,
+    color: "#3B82F6",
+    fontWeight: "600",
   },
 });
 

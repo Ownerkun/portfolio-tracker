@@ -19,8 +19,8 @@ const AssetAllocationChart = () => {
           name: type.name,
           value: typeValue,
           color: getColorForType(type.name),
-          legendFontColor: "#7F7F7F",
-          legendFontSize: 12,
+          legendFontColor: "#6C757D",
+          legendFontSize: 13,
         };
       })
       .filter((item) => item.value > 0);
@@ -30,14 +30,14 @@ const AssetAllocationChart = () => {
 
   const getColorForType = (typeName) => {
     const colors = {
-      Stock: "#FF6B6B",
-      Cryptocurrency: "#4ECDC4",
-      "Mutual Fund": "#45B7D1",
-      Bond: "#96CEB4",
-      "Real Estate": "#FFEAA7",
-      Commodity: "#DDA0DD",
+      Stock: "#3B82F6",
+      Cryptocurrency: "#F59E0B",
+      "Mutual Fund": "#8B5CF6",
+      Bond: "#10B981",
+      "Real Estate": "#EC4899",
+      Commodity: "#EF4444",
     };
-    return colors[typeName] || "#CCCCCC";
+    return colors[typeName] || "#6C757D";
   };
 
   const chartData = calculateAllocationData();
@@ -55,15 +55,16 @@ const AssetAllocationChart = () => {
     <View style={styles.chartContainer}>
       <PieChart
         data={chartData}
-        width={300}
+        width={320}
         height={200}
         chartConfig={{
-          color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+          color: (opacity = 1) => `rgba(26, 26, 26, ${opacity})`,
         }}
         accessor="value"
         backgroundColor="transparent"
         paddingLeft="15"
         absolute
+        hasLegend={true}
       />
     </View>
   );
@@ -73,14 +74,16 @@ const styles = StyleSheet.create({
   chartContainer: {
     alignItems: "center",
     justifyContent: "center",
+    paddingVertical: 8,
   },
   emptyState: {
     alignItems: "center",
-    padding: 20,
+    padding: 32,
   },
   emptyText: {
-    color: "#666",
-    fontSize: 16,
+    color: "#6C757D",
+    fontSize: 15,
+    fontWeight: "500",
   },
 });
 

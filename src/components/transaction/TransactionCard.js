@@ -9,31 +9,32 @@ const TransactionCard = ({
   formatCurrency,
   formatDate,
 }) => {
-  const getTransactionColor = (type) => {
-    return type === "buy" ? "#4CAF50" : "#f44336";
-  };
-
-  const getTransactionIcon = (type) => {
-    return type === "buy" ? "arrow-upward" : "arrow-downward";
-  };
+  const isBuy = transaction.transaction_type === "buy";
 
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <View style={styles.type}>
-          <MaterialIcons
-            name={getTransactionIcon(transaction.transaction_type)}
-            size={20}
-            color={getTransactionColor(transaction.transaction_type)}
-          />
-          <Text
+        <View style={styles.typeContainer}>
+          <View
             style={[
-              styles.typeText,
-              { color: getTransactionColor(transaction.transaction_type) },
+              styles.typeBadge,
+              { backgroundColor: isBuy ? "#10B98115" : "#EF444415" },
             ]}
           >
-            {transaction.transaction_type.toUpperCase()}
-          </Text>
+            <MaterialIcons
+              name={isBuy ? "arrow-upward" : "arrow-downward"}
+              size={16}
+              color={isBuy ? "#10B981" : "#EF4444"}
+            />
+            <Text
+              style={[
+                styles.typeText,
+                { color: isBuy ? "#10B981" : "#EF4444" },
+              ]}
+            >
+              {transaction.transaction_type.toUpperCase()}
+            </Text>
+          </View>
         </View>
         <Text style={styles.date}>
           {formatDate(transaction.transaction_date)}
@@ -42,17 +43,23 @@ const TransactionCard = ({
 
       <View style={styles.details}>
         <View style={styles.detailRow}>
-          <Text style={styles.label}>Quantity:</Text>
+          <Text style={styles.label}>Quantity</Text>
           <Text style={styles.value}>{transaction.quantity}</Text>
         </View>
         <View style={styles.detailRow}>
-          <Text style={styles.label}>Price per unit:</Text>
+          <Text style={styles.label}>Price per unit</Text>
           <Text style={styles.value}>
             {formatCurrency(transaction.price_per_unit)}
           </Text>
         </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.label}>Total Amount:</Text>
+        {transaction.fees > 0 && (
+          <View style={styles.detailRow}>
+            <Text style={styles.label}>Fees</Text>
+            <Text style={styles.value}>{formatCurrency(transaction.fees)}</Text>
+          </View>
+        )}
+        <View style={[styles.detailRow, styles.totalRow]}>
+          <Text style={styles.totalLabel}>Total Amount</Text>
           <Text style={styles.totalAmount}>
             {formatCurrency(transaction.total_amount)}
           </Text>
@@ -60,13 +67,21 @@ const TransactionCard = ({
       </View>
 
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
-          <MaterialIcons name="edit" size={16} color="#666" />
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={onEdit}
+          activeOpacity={0.7}
+        >
+          <MaterialIcons name="edit" size={16} color="#6C757D" />
           <Text style={styles.actionText}>Edit</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={onDelete}>
-          <MaterialIcons name="delete" size={16} color="#f44336" />
-          <Text style={[styles.actionText, { color: "#f44336" }]}>Delete</Text>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={onDelete}
+          activeOpacity={0.7}
+        >
+          <MaterialIcons name="delete" size={16} color="#EF4444" />
+          <Text style={[styles.actionText, { color: "#EF4444" }]}>Delete</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -75,10 +90,12 @@ const TransactionCard = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#f8f9fa",
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
+    backgroundColor: "#F8F9FA",
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#E9ECEF",
   },
   header: {
     flexDirection: "row",
@@ -86,18 +103,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  type: {
+  typeContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
+  typeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
   typeText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginLeft: 6,
+    fontSize: 12,
+    fontWeight: "700",
+    marginLeft: 4,
+    letterSpacing: 0.5,
   },
   date: {
     fontSize: 12,
-    color: "#666",
+    color: "#ADB5BD",
+    fontWeight: "500",
   },
   details: {
     marginBottom: 12,
@@ -106,34 +132,56 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 6,
+    marginBottom: 8,
   },
   label: {
-    fontSize: 12,
-    color: "#666",
+    fontSize: 13,
+    color: "#6C757D",
+    fontWeight: "500",
   },
   value: {
-    fontSize: 12,
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#1A1A1A",
+    letterSpacing: -0.1,
+  },
+  totalRow: {
+    marginTop: 8,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#E9ECEF",
+    marginBottom: 0,
+  },
+  totalLabel: {
+    fontSize: 14,
+    color: "#1A1A1A",
     fontWeight: "600",
   },
   totalAmount: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#333",
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1A1A1A",
+    letterSpacing: -0.2,
   },
   actions: {
     flexDirection: "row",
     justifyContent: "flex-end",
+    borderTopWidth: 1,
+    borderTopColor: "#E9ECEF",
+    paddingTop: 12,
   },
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
-    marginLeft: 15,
+    marginLeft: 16,
+    paddingVertical: 4,
   },
   actionText: {
-    fontSize: 12,
-    color: "#666",
+    fontSize: 13,
+    color: "#6C757D",
     marginLeft: 4,
+    fontWeight: "600",
+    letterSpacing: -0.1,
   },
 });
 

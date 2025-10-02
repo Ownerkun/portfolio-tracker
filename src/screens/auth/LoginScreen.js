@@ -8,8 +8,9 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  TextInput,
 } from "react-native";
-import { TextInput, ActivityIndicator } from "react-native-paper";
+import { ActivityIndicator } from "react-native-paper";
 import { useAuth } from "../../AuthContext";
 import { MaterialIcons } from "@expo/vector-icons";
 
@@ -17,6 +18,7 @@ const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { signIn } = useAuth();
 
   const handleLogin = async () => {
@@ -40,7 +42,6 @@ const LoginScreen = ({ navigation }) => {
   };
 
   const handleQuickLogin = () => {
-    // Bypass login for development
     signIn("demo@example.com", "password");
   };
 
@@ -49,9 +50,14 @@ const LoginScreen = ({ navigation }) => {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
-          <MaterialIcons name="trending-up" size={60} color="#6200EA" />
+          <View style={styles.iconContainer}>
+            <MaterialIcons name="trending-up" size={48} color="#3B82F6" />
+          </View>
           <Text style={styles.title}>Portfolio Tracker</Text>
           <Text style={styles.subtitle}>
             Track all your investments in one place
@@ -59,59 +65,58 @@ const LoginScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.formContainer}>
-          <TextInput
-            label="Email"
-            mode="outlined"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            disabled={loading}
-            left={<TextInput.Icon icon="email" />}
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Email</Text>
+            <View style={styles.inputWrapper}>
+              <MaterialIcons
+                name="email"
+                size={20}
+                color="#6C757D"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your email"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
+                editable={!loading}
+                placeholderTextColor="#ADB5BD"
+              />
+            </View>
+          </View>
 
-          <TextInput
-            label="Password"
-            mode="outlined"
-            secureTextEntry
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            disabled={loading}
-            left={<TextInput.Icon icon="lock" />}
-          />
-
-          <TouchableOpacity
-            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.loginButtonText}>Sign In</Text>
-            )}
-          </TouchableOpacity>
-
-          {/* Quick login for development */}
-          <TouchableOpacity
-            style={styles.quickLoginButton}
-            onPress={handleQuickLogin}
-            disabled={loading}
-          >
-            <Text style={styles.quickLoginText}>Quick Login (Development)</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.switchModeButton}
-            onPress={() => navigation.navigate("Register")}
-            disabled={loading}
-          >
-            <Text style={styles.switchModeText}>
-              Don't have an account? Sign Up
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Password</Text>
+            <View style={styles.inputWrapper}>
+              <MaterialIcons
+                name="lock"
+                size={20}
+                color="#6C757D"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+                editable={!loading}
+                placeholderTextColor="#ADB5BD"
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeIcon}
+              >
+                <MaterialIcons
+                  name={showPassword ? "visibility" : "visibility-off"}
+                  size={20}
+                  color="#6C757D"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
 
           <TouchableOpacity
             style={styles.forgotPasswordButton}
@@ -120,6 +125,45 @@ const LoginScreen = ({ navigation }) => {
           >
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+            activeOpacity={0.7}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.loginButtonText}>Sign In</Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={styles.quickLoginButton}
+            onPress={handleQuickLogin}
+            disabled={loading}
+            activeOpacity={0.7}
+          >
+            <MaterialIcons name="bolt" size={18} color="#10B981" />
+            <Text style={styles.quickLoginText}>Quick Login (Dev)</Text>
+          </TouchableOpacity>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Don't have an account? </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Register")}
+              disabled={loading}
+            >
+              <Text style={styles.footerLink}>Sign Up</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -129,7 +173,7 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#F8F9FA",
   },
   scrollContainer: {
     flexGrow: 1,
@@ -140,77 +184,137 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 40,
   },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    backgroundColor: "#3B82F615",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
   title: {
     fontSize: 32,
-    fontWeight: "bold",
-    color: "#333",
-    marginTop: 10,
-    marginBottom: 5,
+    fontWeight: "700",
+    color: "#1A1A1A",
+    marginBottom: 8,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
-    color: "#666",
+    fontSize: 15,
+    color: "#6C757D",
     textAlign: "center",
+    fontWeight: "500",
   },
   formContainer: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: "#FFFFFF",
+    padding: 24,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E9ECEF",
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1A1A1A",
+    marginBottom: 8,
+    letterSpacing: -0.1,
+  },
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E9ECEF",
+    borderRadius: 10,
+    backgroundColor: "#F8F9FA",
+    paddingHorizontal: 14,
+  },
+  inputIcon: {
+    marginRight: 10,
   },
   input: {
-    marginBottom: 16,
-    backgroundColor: "#fff",
+    flex: 1,
+    paddingVertical: 14,
+    fontSize: 15,
+    color: "#1A1A1A",
   },
-  loginButton: {
-    backgroundColor: "#6200EA",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  loginButtonDisabled: {
-    backgroundColor: "#ccc",
-  },
-  loginButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  quickLoginButton: {
-    backgroundColor: "#4CAF50",
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  quickLoginText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  switchModeButton: {
-    alignItems: "center",
-    padding: 10,
-  },
-  switchModeText: {
-    color: "#6200EA",
-    fontSize: 14,
-    fontWeight: "500",
+  eyeIcon: {
+    padding: 4,
   },
   forgotPasswordButton: {
-    alignItems: "center",
-    padding: 10,
-    marginTop: 10,
+    alignSelf: "flex-end",
+    marginBottom: 24,
   },
   forgotPasswordText: {
-    color: "#666",
+    color: "#3B82F6",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  loginButton: {
+    backgroundColor: "#3B82F6",
+    padding: 16,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  loginButtonDisabled: {
+    backgroundColor: "#ADB5BD",
+  },
+  loginButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+    letterSpacing: -0.2,
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#E9ECEF",
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 13,
+    color: "#ADB5BD",
+    fontWeight: "600",
+  },
+  quickLoginButton: {
+    flexDirection: "row",
+    backgroundColor: "#10B98115",
+    padding: 14,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#10B98130",
+  },
+  quickLoginText: {
+    color: "#10B981",
     fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 8,
+    letterSpacing: -0.1,
+  },
+  footer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 24,
+  },
+  footerText: {
+    fontSize: 14,
+    color: "#6C757D",
+  },
+  footerLink: {
+    fontSize: 14,
+    color: "#3B82F6",
+    fontWeight: "600",
   },
 });
 

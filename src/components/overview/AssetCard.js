@@ -16,68 +16,73 @@ const AssetCard = ({ asset, onPress }) => {
   };
 
   const getAssetIcon = (assetType) => {
-    switch (assetType) {
-      case "Stock":
-        return "📈";
-      case "Cryptocurrency":
-        return "₿";
-      case "Mutual Fund":
-        return "📊";
-      case "Bond":
-        return "🏦";
-      case "Real Estate":
-        return "🏠";
-      case "Commodity":
-        return "🪙";
-      default:
-        return "💼";
-    }
+    const icons = {
+      Stock: "show-chart",
+      Cryptocurrency: "currency-bitcoin",
+      "Mutual Fund": "pie-chart",
+      Bond: "account-balance",
+      "Real Estate": "home",
+      Commodity: "star",
+    };
+    return icons[assetType] || "account-balance-wallet";
   };
 
+  const getAssetColor = (assetType) => {
+    const colors = {
+      Stock: "#3B82F6",
+      Cryptocurrency: "#F59E0B",
+      "Mutual Fund": "#8B5CF6",
+      Bond: "#10B981",
+      "Real Estate": "#EC4899",
+      Commodity: "#EF4444",
+    };
+    return colors[assetType] || "#6C757D";
+  };
+
+  const assetColor = getAssetColor(asset.asset_type?.name);
+  const isProfitable = asset.profit_loss >= 0;
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
-      {/* Single Row Layout */}
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.row}>
         {/* Asset Icon */}
-        <View style={styles.iconColumn}>
-          <Text style={styles.assetIcon}>
-            {getAssetIcon(asset.asset_type?.name)}
-          </Text>
+        <View
+          style={[styles.iconContainer, { backgroundColor: `${assetColor}15` }]}
+        >
+          <MaterialIcons
+            name={getAssetIcon(asset.asset_type?.name)}
+            size={20}
+            color={assetColor}
+          />
         </View>
 
-        {/* Symbol */}
-        <View style={styles.symbolColumn}>
+        {/* Asset Info */}
+        <View style={styles.assetInfo}>
           <Text style={styles.symbol}>{asset.symbol}</Text>
+          <Text style={styles.assetType}>{asset.asset_type?.name}</Text>
         </View>
 
-        {/* Current Price */}
-        <View style={styles.priceColumn}>
+        {/* Values */}
+        <View style={styles.valuesContainer}>
           <Text style={styles.currentPrice}>
             {formatCurrency(asset.current_price || 0)}
           </Text>
-        </View>
-
-        {/* Profit/Loss */}
-        <View style={styles.plColumn}>
-          <View style={styles.plContainer}>
-            <MaterialIcons
-              name={asset.profit_loss >= 0 ? "trending-up" : "trending-down"}
-              size={16}
-              color={asset.profit_loss >= 0 ? "#4CAF50" : "#f44336"}
-            />
-            <View style={styles.plTextContainer}>
-              <Text
-                style={[
-                  styles.plAmount,
-                  { color: asset.profit_loss >= 0 ? "#4CAF50" : "#f44336" },
-                ]}
-              >
-                {formatCurrency(asset.profit_loss || 0)}
-              </Text>
+          <View style={styles.plRow}>
+            <View
+              style={[
+                styles.plBadge,
+                { backgroundColor: isProfitable ? "#10B98115" : "#EF444415" },
+              ]}
+            >
+              <MaterialIcons
+                name={isProfitable ? "arrow-drop-up" : "arrow-drop-down"}
+                size={16}
+                color={isProfitable ? "#10B981" : "#EF4444"}
+              />
               <Text
                 style={[
                   styles.plPercentage,
-                  { color: asset.profit_loss >= 0 ? "#4CAF50" : "#f44336" },
+                  { color: isProfitable ? "#10B981" : "#EF4444" },
                 ]}
               >
                 {formatPercentage(asset.profit_loss_percentage || 0)}
@@ -87,9 +92,7 @@ const AssetCard = ({ asset, onPress }) => {
         </View>
 
         {/* Chevron */}
-        <View style={styles.chevronColumn}>
-          <MaterialIcons name="chevron-right" size={20} color="#999" />
-        </View>
+        <MaterialIcons name="chevron-right" size={20} color="#CED4DA" />
       </View>
     </TouchableOpacity>
   );
@@ -97,66 +100,65 @@ const AssetCard = ({ asset, onPress }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff",
-    padding: 16,
+    backgroundColor: "#F8F9FA",
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     marginBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderRadius: 8,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
   },
-  iconColumn: {
+  iconContainer: {
     width: 40,
+    height: 40,
+    borderRadius: 10,
     alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
   },
-  assetIcon: {
-    fontSize: 20,
-  },
-  symbolColumn: {
+  assetInfo: {
     flex: 1,
-    marginLeft: 12,
   },
   symbol: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  priceColumn: {
-    width: 80,
-    alignItems: "flex-end",
-  },
-  currentPrice: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
-    color: "#333",
+    color: "#1A1A1A",
+    marginBottom: 2,
+    letterSpacing: -0.2,
   },
-  plColumn: {
-    width: 100,
+  assetType: {
+    fontSize: 12,
+    color: "#6C757D",
+    fontWeight: "500",
+  },
+  valuesContainer: {
     alignItems: "flex-end",
     marginRight: 8,
   },
-  plContainer: {
+  currentPrice: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1A1A1A",
+    marginBottom: 4,
+    letterSpacing: -0.2,
+  },
+  plRow: {
     flexDirection: "row",
     alignItems: "center",
   },
-  plTextContainer: {
-    marginLeft: 4,
-    alignItems: "flex-end",
-  },
-  plAmount: {
-    fontSize: 12,
-    fontWeight: "600",
+  plBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
   plPercentage: {
-    fontSize: 10,
-    fontWeight: "500",
-  },
-  chevronColumn: {
-    width: 20,
-    alignItems: "center",
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: -0.1,
   },
 });
 

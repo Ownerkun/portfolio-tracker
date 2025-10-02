@@ -1,6 +1,6 @@
-// AssetDetailScreen.js - Enhanced with all asset details
 import React, { useState } from "react";
 import { ScrollView, Alert, StyleSheet, View, Text } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 import { mockTransactions } from "../../data/mockData";
 import TransactionList from "../../components/transaction/TransactionList";
 import TransactionModal from "../../components/transaction/TransactionModal";
@@ -115,100 +115,114 @@ const AssetDetailScreen = ({ route }) => {
   };
 
   const getAssetIcon = (assetType) => {
-    switch (assetType) {
-      case "Stock":
-        return "📈";
-      case "Cryptocurrency":
-        return "₿";
-      case "Mutual Fund":
-        return "📊";
-      case "Bond":
-        return "🏦";
-      case "Real Estate":
-        return "🏠";
-      case "Commodity":
-        return "🪙";
-      default:
-        return "💼";
-    }
+    const icons = {
+      Stock: "show-chart",
+      Cryptocurrency: "currency-bitcoin",
+      "Mutual Fund": "pie-chart",
+      Bond: "account-balance",
+      "Real Estate": "home",
+      Commodity: "star",
+    };
+    return icons[assetType] || "account-balance-wallet";
   };
 
+  const getAssetColor = (assetType) => {
+    const colors = {
+      Stock: "#3B82F6",
+      Cryptocurrency: "#F59E0B",
+      "Mutual Fund": "#8B5CF6",
+      Bond: "#10B981",
+      "Real Estate": "#EC4899",
+      Commodity: "#EF4444",
+    };
+    return colors[assetType] || "#6C757D";
+  };
+
+  const assetColor = getAssetColor(asset.asset_type?.name);
+  const isProfitable = asset.profit_loss >= 0;
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Asset Header */}
       <View style={styles.header}>
-        <View style={styles.assetHeader}>
-          <Text style={styles.assetIcon}>
-            {getAssetIcon(asset.asset_type?.name)}
+        <View
+          style={[styles.iconContainer, { backgroundColor: `${assetColor}15` }]}
+        >
+          <MaterialIcons
+            name={getAssetIcon(asset.asset_type?.name)}
+            size={32}
+            color={assetColor}
+          />
+        </View>
+
+        <View style={styles.headerInfo}>
+          <Text style={styles.assetSymbol}>{asset.symbol}</Text>
+          <Text style={styles.assetName}>{asset.name}</Text>
+        </View>
+
+        <View style={styles.valueContainer}>
+          <Text style={styles.totalValue}>
+            {formatCurrency(asset.total_value || 0)}
           </Text>
-          <View style={styles.assetInfo}>
-            <Text style={styles.assetSymbol}>{asset.symbol}</Text>
-            <Text style={styles.assetName}>{asset.name}</Text>
+          <View
+            style={[
+              styles.plBadge,
+              { backgroundColor: isProfitable ? "#10B98115" : "#EF444415" },
+            ]}
+          >
+            <MaterialIcons
+              name={isProfitable ? "arrow-drop-up" : "arrow-drop-down"}
+              size={16}
+              color={isProfitable ? "#10B981" : "#EF4444"}
+            />
+            <Text
+              style={[
+                styles.plText,
+                { color: isProfitable ? "#10B981" : "#EF4444" },
+              ]}
+            >
+              {formatPercentage(asset.profit_loss_percentage || 0)}
+            </Text>
           </View>
         </View>
-        <Text style={styles.totalValue}>
-          {formatCurrency(asset.total_value || 0)}
-        </Text>
       </View>
 
-      {/* Asset Details */}
+      {/* Asset Details Grid */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Asset Details</Text>
+        <Text style={styles.sectionTitle}>Details</Text>
 
         <View style={styles.detailGrid}>
-          <View style={styles.detailItem}>
+          <View style={styles.detailCard}>
             <Text style={styles.detailLabel}>Quantity</Text>
-            <Text style={styles.detailValue}>
-              {asset.quantity}{" "}
+            <Text style={styles.detailValue}>{asset.quantity}</Text>
+            <Text style={styles.detailUnit}>
               {asset.asset_type?.name === "Cryptocurrency" ? "coins" : "shares"}
             </Text>
           </View>
 
-          <View style={styles.detailItem}>
+          <View style={styles.detailCard}>
             <Text style={styles.detailLabel}>Avg. Buy Price</Text>
             <Text style={styles.detailValue}>
               {formatCurrency(asset.average_buy_price)}
             </Text>
           </View>
 
-          <View style={styles.detailItem}>
+          <View style={styles.detailCard}>
             <Text style={styles.detailLabel}>Current Price</Text>
             <Text style={styles.detailValue}>
               {formatCurrency(asset.current_price || 0)}
             </Text>
           </View>
 
-          <View style={styles.detailItem}>
+          <View style={styles.detailCard}>
             <Text style={styles.detailLabel}>Total P&L</Text>
             <Text
               style={[
                 styles.detailValue,
-                { color: asset.profit_loss >= 0 ? "#4CAF50" : "#f44336" },
+                { color: asset.profit_loss >= 0 ? "#10B981" : "#EF4444" },
               ]}
             >
               {formatCurrency(asset.profit_loss || 0)}
-            </Text>
-          </View>
-
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>P&L %</Text>
-            <Text
-              style={[
-                styles.detailValue,
-                {
-                  color:
-                    asset.profit_loss_percentage >= 0 ? "#4CAF50" : "#f44336",
-                },
-              ]}
-            >
-              {formatPercentage(asset.profit_loss_percentage || 0)}
-            </Text>
-          </View>
-
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Asset Type</Text>
-            <Text style={styles.detailValue}>
-              {asset.asset_type?.name || "Unknown"}
             </Text>
           </View>
         </View>
@@ -233,6 +247,8 @@ const AssetDetailScreen = ({ route }) => {
         onSave={handleSaveTransaction}
         onCancel={() => setModalVisible(false)}
       />
+
+      <View style={styles.bottomSpacing} />
     </ScrollView>
   );
 };
@@ -240,70 +256,111 @@ const AssetDetailScreen = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#F8F9FA",
   },
   header: {
     padding: 20,
-    backgroundColor: "#fff",
-    alignItems: "center",
-  },
-  assetHeader: {
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E9ECEF",
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
   },
-  assetIcon: {
-    fontSize: 32,
-    marginRight: 12,
-  },
-  assetInfo: {
+  iconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 14,
     alignItems: "center",
+    justifyContent: "center",
+    marginRight: 16,
+  },
+  headerInfo: {
+    flex: 1,
   },
   assetSymbol: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1A1A1A",
+    letterSpacing: -0.3,
+    marginBottom: 2,
   },
   assetName: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: 13,
+    color: "#6C757D",
+    fontWeight: "500",
+  },
+  valueContainer: {
+    alignItems: "flex-end",
   },
   totalValue: {
     fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
+    fontWeight: "700",
+    color: "#1A1A1A",
+    marginBottom: 6,
+    letterSpacing: -0.3,
+  },
+  plBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  plText: {
+    fontSize: 13,
+    fontWeight: "600",
+    letterSpacing: -0.1,
   },
   section: {
-    backgroundColor: "#fff",
-    margin: 20,
-    marginTop: 0,
-    padding: 20,
+    backgroundColor: "#FFFFFF",
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 16,
     borderRadius: 12,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 15,
-    color: "#333",
+    fontWeight: "600",
+    color: "#1A1A1A",
+    marginBottom: 16,
+    letterSpacing: -0.3,
   },
   detailGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    marginHorizontal: -6,
   },
-  detailItem: {
-    width: "48%",
-    marginBottom: 15,
+  detailCard: {
+    width: "50%",
+    padding: 6,
+  },
+  detailCardInner: {
+    backgroundColor: "#F8F9FA",
+    padding: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E9ECEF",
   },
   detailLabel: {
     fontSize: 12,
-    color: "#666",
-    marginBottom: 4,
+    color: "#6C757D",
+    marginBottom: 6,
+    fontWeight: "500",
   },
   detailValue: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1A1A1A",
+    letterSpacing: -0.3,
+  },
+  detailUnit: {
+    fontSize: 11,
+    color: "#ADB5BD",
+    marginTop: 2,
+    fontWeight: "500",
+  },
+  bottomSpacing: {
+    height: 20,
   },
 });
 

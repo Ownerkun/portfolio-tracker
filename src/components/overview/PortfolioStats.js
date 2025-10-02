@@ -9,10 +9,11 @@ const PortfolioStats = () => {
   return (
     <View style={styles.container}>
       <PortfolioSummaryCard
-        title="Total Portfolio Value"
+        title="Total Value"
         value={portfolioSummary.totalValue}
         icon="attach-money"
-        color="#4CAF50"
+        color="#10B981"
+        isMain={true}
       />
       <PortfolioSummaryCard
         title="Total P&L"
@@ -23,7 +24,8 @@ const PortfolioStats = () => {
             ? "trending-up"
             : "trending-down"
         }
-        color={portfolioSummary.totalProfitLoss >= 0 ? "#4CAF50" : "#f44336"}
+        color={portfolioSummary.totalProfitLoss >= 0 ? "#10B981" : "#EF4444"}
+        isMain={false}
       />
     </View>
   );
@@ -32,8 +34,9 @@ const PortfolioStats = () => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    padding: 20,
-    paddingTop: 10,
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
 });
 

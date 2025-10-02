@@ -17,41 +17,31 @@ const OverviewScreen = ({ navigation }) => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Portfolio Overview</Text>
-        {profile && (
-          <Text style={styles.welcomeText}>
-            Welcome back, {profile.username}!
-          </Text>
-        )}
+        <Text style={styles.title}>Portfolio</Text>
+        {profile && <Text style={styles.welcomeText}>{profile.username}</Text>}
       </View>
 
-      <ScrollView style={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Portfolio Summary Cards */}
         <PortfolioStats />
 
         {/* Asset Allocation */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Asset Allocation</Text>
+          <Text style={styles.sectionTitle}>Allocation</Text>
           <AssetAllocationChart />
         </View>
 
         {/* Assets List */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Your Assets</Text>
-            <Text style={styles.assetCount}>
-              {enrichedMockAssets.length} assets
-            </Text>
+            <Text style={styles.sectionTitle}>Holdings</Text>
+            <Text style={styles.assetCount}>{enrichedMockAssets.length}</Text>
           </View>
 
-          {/* Assets List Header */}
-          <View style={styles.assetsHeader}>
-            <Text style={styles.headerLabel}>Asset</Text>
-            <Text style={styles.headerLabel}>Price</Text>
-            <Text style={styles.headerLabel}>P&L</Text>
-          </View>
-
-          {/* Simplified Asset Cards */}
+          {/* Assets List */}
           {enrichedMockAssets.map((asset) => (
             <AssetCard
               key={asset.id}
@@ -60,6 +50,8 @@ const OverviewScreen = ({ navigation }) => {
             />
           ))}
         </View>
+
+        <View style={styles.bottomSpacing} />
       </ScrollView>
     </View>
   );
@@ -68,67 +60,58 @@ const OverviewScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#F8F9FA",
     paddingTop: 50,
   },
   header: {
-    padding: 20,
-    backgroundColor: "#fff",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E9ECEF",
   },
   scrollContent: {
     flex: 1,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#333",
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#1A1A1A",
+    letterSpacing: -0.5,
   },
   welcomeText: {
-    fontSize: 16,
-    color: "#666",
-    marginTop: 5,
+    fontSize: 15,
+    color: "#6C757D",
+    marginTop: 4,
+    fontWeight: "500",
   },
   section: {
-    backgroundColor: "#fff",
-    margin: 20,
-    marginTop: 0,
-    padding: 20,
+    backgroundColor: "#FFFFFF",
+    marginHorizontal: 16,
+    marginTop: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
     borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1A1A1A",
+    letterSpacing: -0.3,
   },
   assetCount: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: 15,
+    color: "#6C757D",
+    fontWeight: "500",
   },
-  assetsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#f8f9fa",
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  headerLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#666",
-    textTransform: "uppercase",
+  bottomSpacing: {
+    height: 20,
   },
 });
 
