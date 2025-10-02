@@ -16,6 +16,7 @@ import OverviewScreen from "../screens/OverviewScreen";
 import AssetDetailScreen from "../screens/asset/AssetDetailScreen";
 import ProfileScreen from "../screens/profile/ProfileScreen";
 import AddAssetScreen from "../screens/asset/AddAssetScreen";
+import AddTransactionScreen from "../screens/transaction/AddTransactionScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -40,6 +41,15 @@ const AuthenticatedStack = () => {
         options={{
           headerShown: true,
           title: "Add Asset",
+          headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name="AddTransaction"
+        component={AddTransactionScreen}
+        options={{
+          headerShown: true,
+          title: "Add Transaction",
           headerBackTitle: "Back",
         }}
       />

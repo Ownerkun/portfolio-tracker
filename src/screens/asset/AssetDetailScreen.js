@@ -1,24 +1,21 @@
 import React, { useState } from "react";
-import { ScrollView, Alert, StyleSheet, View, Text } from "react-native";
+import {
+  ScrollView,
+  Alert,
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+} from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { mockTransactions } from "../../data/mockData";
 import TransactionList from "../../components/transaction/TransactionList";
-import TransactionModal from "../../components/transaction/TransactionModal";
 
-const AssetDetailScreen = ({ route }) => {
+const AssetDetailScreen = ({ route, navigation }) => {
   const { asset } = route.params;
   const [transactions, setTransactions] = useState(
     mockTransactions.filter((t) => t.asset_id === asset.id)
   );
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState(null);
-  const [formData, setFormData] = useState({
-    transaction_type: "buy",
-    quantity: "",
-    price_per_unit: "",
-    fees: "",
-    notes: "",
-  });
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
@@ -41,27 +38,17 @@ const AssetDetailScreen = ({ route }) => {
   };
 
   const handleAddTransaction = () => {
-    setEditingTransaction(null);
-    setFormData({
-      transaction_type: "buy",
-      quantity: "",
-      price_per_unit: "",
-      fees: "",
-      notes: "",
-    });
-    setModalVisible(true);
+    navigation.navigate("AddTransaction", { asset });
   };
 
   const handleEditTransaction = (transaction) => {
-    setEditingTransaction(transaction);
-    setFormData({
-      transaction_type: transaction.transaction_type,
-      quantity: transaction.quantity.toString(),
-      price_per_unit: transaction.price_per_unit.toString(),
-      fees: transaction.fees.toString(),
-      notes: transaction.notes || "",
+    // For now, navigate to AddTransaction screen with edit mode
+    // implement proper edit functionality later
+    navigation.navigate("AddTransaction", {
+      asset,
+      transaction,
+      isEditing: true,
     });
-    setModalVisible(true);
   };
 
   const handleDeleteTransaction = (transactionId) => {
@@ -79,39 +66,6 @@ const AssetDetailScreen = ({ route }) => {
         },
       ]
     );
-  };
-
-  const handleSaveTransaction = () => {
-    if (!formData.quantity || !formData.price_per_unit) {
-      Alert.alert("Error", "Please fill in all required fields");
-      return;
-    }
-
-    const newTransaction = {
-      id: editingTransaction ? editingTransaction.id : Date.now().toString(),
-      asset_id: asset.id,
-      transaction_type: formData.transaction_type,
-      quantity: parseFloat(formData.quantity),
-      price_per_unit: parseFloat(formData.price_per_unit),
-      fees: parseFloat(formData.fees) || 0,
-      total_amount:
-        parseFloat(formData.quantity) * parseFloat(formData.price_per_unit) +
-        (parseFloat(formData.fees) || 0),
-      transaction_date: new Date().toISOString(),
-      notes: formData.notes,
-    };
-
-    if (editingTransaction) {
-      setTransactions(
-        transactions.map((t) =>
-          t.id === editingTransaction.id ? newTransaction : t
-        )
-      );
-    } else {
-      setTransactions([...transactions, newTransaction]);
-    }
-
-    setModalVisible(false);
   };
 
   const getAssetIcon = (assetType) => {
@@ -142,114 +96,131 @@ const AssetDetailScreen = ({ route }) => {
   const isProfitable = asset.profit_loss >= 0;
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Asset Header */}
-      <View style={styles.header}>
-        <View
-          style={[styles.iconContainer, { backgroundColor: `${assetColor}15` }]}
-        >
-          <MaterialIcons
-            name={getAssetIcon(asset.asset_type?.name)}
-            size={32}
-            color={assetColor}
-          />
-        </View>
-
-        <View style={styles.headerInfo}>
-          <Text style={styles.assetSymbol}>{asset.symbol}</Text>
-          <Text style={styles.assetName}>{asset.name}</Text>
-        </View>
-
-        <View style={styles.valueContainer}>
-          <Text style={styles.totalValue}>
-            {formatCurrency(asset.total_value || 0)}
-          </Text>
+    <View style={styles.container}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Asset Header */}
+        <View style={styles.header}>
           <View
             style={[
-              styles.plBadge,
-              { backgroundColor: isProfitable ? "#10B98115" : "#EF444415" },
+              styles.iconContainer,
+              { backgroundColor: `${assetColor}15` },
             ]}
           >
             <MaterialIcons
-              name={isProfitable ? "arrow-drop-up" : "arrow-drop-down"}
-              size={16}
-              color={isProfitable ? "#10B981" : "#EF4444"}
+              name={getAssetIcon(asset.asset_type?.name)}
+              size={32}
+              color={assetColor}
             />
-            <Text
+          </View>
+
+          <View style={styles.headerInfo}>
+            <Text style={styles.assetSymbol}>{asset.symbol}</Text>
+            <Text style={styles.assetName}>{asset.name}</Text>
+          </View>
+
+          <View style={styles.valueContainer}>
+            <Text style={styles.totalValue}>
+              {formatCurrency(asset.total_value || 0)}
+            </Text>
+            <View
               style={[
-                styles.plText,
-                { color: isProfitable ? "#10B981" : "#EF4444" },
+                styles.plBadge,
+                { backgroundColor: isProfitable ? "#10B98115" : "#EF444415" },
               ]}
             >
-              {formatPercentage(asset.profit_loss_percentage || 0)}
-            </Text>
+              <MaterialIcons
+                name={isProfitable ? "arrow-drop-up" : "arrow-drop-down"}
+                size={16}
+                color={isProfitable ? "#10B981" : "#EF4444"}
+              />
+              <Text
+                style={[
+                  styles.plText,
+                  { color: isProfitable ? "#10B981" : "#EF4444" },
+                ]}
+              >
+                {formatPercentage(asset.profit_loss_percentage || 0)}
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* Asset Details Grid */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Details</Text>
+        {/* Asset Details Grid */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Details</Text>
 
-        <View style={styles.detailGrid}>
-          <View style={styles.detailCard}>
-            <Text style={styles.detailLabel}>Quantity</Text>
-            <Text style={styles.detailValue}>{asset.quantity}</Text>
-            <Text style={styles.detailUnit}>
-              {asset.asset_type?.name === "Cryptocurrency" ? "coins" : "shares"}
-            </Text>
-          </View>
+          <View style={styles.detailGrid}>
+            <View style={styles.detailCard}>
+              <View style={styles.detailCardInner}>
+                <Text style={styles.detailLabel}>Quantity</Text>
+                <Text style={styles.detailValue}>{asset.quantity}</Text>
+                <Text style={styles.detailUnit}>
+                  {asset.asset_type?.name === "Cryptocurrency"
+                    ? "coins"
+                    : "shares"}
+                </Text>
+              </View>
+            </View>
 
-          <View style={styles.detailCard}>
-            <Text style={styles.detailLabel}>Avg. Buy Price</Text>
-            <Text style={styles.detailValue}>
-              {formatCurrency(asset.average_buy_price)}
-            </Text>
-          </View>
+            <View style={styles.detailCard}>
+              <View style={styles.detailCardInner}>
+                <Text style={styles.detailLabel}>Avg. Buy Price</Text>
+                <Text style={styles.detailValue}>
+                  {formatCurrency(asset.average_buy_price)}
+                </Text>
+              </View>
+            </View>
 
-          <View style={styles.detailCard}>
-            <Text style={styles.detailLabel}>Current Price</Text>
-            <Text style={styles.detailValue}>
-              {formatCurrency(asset.current_price || 0)}
-            </Text>
-          </View>
+            <View style={styles.detailCard}>
+              <View style={styles.detailCardInner}>
+                <Text style={styles.detailLabel}>Current Price</Text>
+                <Text style={styles.detailValue}>
+                  {formatCurrency(asset.current_price || 0)}
+                </Text>
+              </View>
+            </View>
 
-          <View style={styles.detailCard}>
-            <Text style={styles.detailLabel}>Total P&L</Text>
-            <Text
-              style={[
-                styles.detailValue,
-                { color: asset.profit_loss >= 0 ? "#10B981" : "#EF4444" },
-              ]}
-            >
-              {formatCurrency(asset.profit_loss || 0)}
-            </Text>
+            <View style={styles.detailCard}>
+              <View style={styles.detailCardInner}>
+                <Text style={styles.detailLabel}>Total P&L</Text>
+                <Text
+                  style={[
+                    styles.detailValue,
+                    { color: asset.profit_loss >= 0 ? "#10B981" : "#EF4444" },
+                  ]}
+                >
+                  {formatCurrency(asset.profit_loss || 0)}
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* Transactions Section */}
-      <TransactionList
-        transactions={transactions}
-        onAddTransaction={handleAddTransaction}
-        onEditTransaction={handleEditTransaction}
-        onDeleteTransaction={handleDeleteTransaction}
-        formatCurrency={formatCurrency}
-        formatDate={formatDate}
-      />
+        {/* Transactions Section */}
+        <TransactionList
+          transactions={transactions}
+          onAddTransaction={handleAddTransaction}
+          onEditTransaction={handleEditTransaction}
+          onDeleteTransaction={handleDeleteTransaction}
+          formatCurrency={formatCurrency}
+          formatDate={formatDate}
+        />
 
-      {/* Transaction Modal */}
-      <TransactionModal
-        visible={modalVisible}
-        editingTransaction={editingTransaction}
-        formData={formData}
-        setFormData={setFormData}
-        onSave={handleSaveTransaction}
-        onCancel={() => setModalVisible(false)}
-      />
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
 
-      <View style={styles.bottomSpacing} />
-    </ScrollView>
+      {/* Floating Action Button for Add Transaction */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={handleAddTransaction}
+        activeOpacity={0.8}
+      >
+        <MaterialIcons name="add" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
+    </View>
   );
 };
 
@@ -257,6 +228,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F8F9FA",
+  },
+  scrollView: {
+    flex: 1,
   },
   header: {
     padding: 20,
@@ -361,6 +335,22 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 20,
+  },
+  fab: {
+    position: "absolute",
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#3B82F6",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
 });
 

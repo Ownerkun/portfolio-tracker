@@ -26,11 +26,8 @@ const OverviewScreen = ({ navigation }) => {
   };
 
   const handleAddTransaction = (asset) => {
-    // Navigate to AssetDetail screen and open add transaction modal
-    navigation.navigate("AssetDetail", {
-      asset,
-      openTransactionModal: true,
-    });
+    // Navigate to AddTransaction screen
+    navigation.navigate("AddTransaction", { asset });
   };
 
   const handleRemoveAsset = (assetId) => {
