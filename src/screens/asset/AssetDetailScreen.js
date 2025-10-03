@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, View, TouchableOpacity } from "react-native";
+import { ScrollView, View, TouchableOpacity, Alert } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { mockTransactions } from "../../data/mockData";
 import TransactionList from "../../components/transaction/TransactionList";
@@ -38,10 +38,9 @@ const AssetDetailScreen = ({ route, navigation }) => {
   };
 
   const handleEditTransaction = (transaction) => {
-    navigation.navigate("AddTransaction", {
+    navigation.navigate("EditTransaction", {
       asset,
       transaction,
-      isEditing: true,
     });
   };
 

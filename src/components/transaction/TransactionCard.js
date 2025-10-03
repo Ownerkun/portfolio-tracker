@@ -11,6 +11,14 @@ const TransactionCard = ({
 }) => {
   const isBuy = transaction.transaction_type === "buy";
 
+  const handleEditPress = () => {
+    onEdit(transaction);
+  };
+
+  const handleDeletePress = () => {
+    onDelete(transaction.id);
+  };
+
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -69,7 +77,7 @@ const TransactionCard = ({
       <View style={styles.actions}>
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={onEdit}
+          onPress={handleEditPress}
           activeOpacity={0.7}
         >
           <MaterialIcons name="edit" size={16} color="#6C757D" />
@@ -77,7 +85,7 @@ const TransactionCard = ({
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={onDelete}
+          onPress={handleDeletePress}
           activeOpacity={0.7}
         >
           <MaterialIcons name="delete" size={16} color="#EF4444" />
