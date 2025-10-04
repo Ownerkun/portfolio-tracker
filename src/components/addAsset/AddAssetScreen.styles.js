@@ -23,6 +23,7 @@ const styles = StyleSheet.create({
     color: "#1A1A1A",
   },
   listContent: {
+    flexGrow: 1,
     padding: 16,
   },
   assetItem: {
@@ -52,6 +53,11 @@ const styles = StyleSheet.create({
   assetName: {
     fontSize: 14,
     color: "#6C757D",
+    marginBottom: 2,
+  },
+  assetExchange: {
+    fontSize: 12,
+    color: "#ADB5BD",
   },
   assetTypeBadge: {
     backgroundColor: "#F8F9FA",
@@ -79,6 +85,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#ADB5BD",
     marginTop: 4,
+    textAlign: "center",
   },
   footer: {
     padding: 16,
@@ -99,6 +106,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginLeft: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 40,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#6C757D",
   },
 });
 

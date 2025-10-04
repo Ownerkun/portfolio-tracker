@@ -1,55 +1,67 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
+import { useAssets } from "../../AssetContext";
 import SearchBar from "../../components/addAsset/SearchBar";
 import AssetList from "../../components/addAsset/AssetList";
 import AddButton from "../../components/addAsset/AddButton";
 import styles from "../../components/addAsset/AddAssetScreen.styles";
-
-// Mock data for available assets - this will be replaced with API call
-const mockAvailableAssets = [
-  { id: "1", symbol: "AAPL", name: "Apple Inc.", type: "Stock" },
-  { id: "2", symbol: "GOOGL", name: "Alphabet Inc.", type: "Stock" },
-  { id: "3", symbol: "MSFT", name: "Microsoft Corporation", type: "Stock" },
-  { id: "4", symbol: "TSLA", name: "Tesla Inc.", type: "Stock" },
-  { id: "5", symbol: "AMZN", name: "Amazon.com Inc.", type: "Stock" },
-  { id: "6", symbol: "BTC", name: "Bitcoin", type: "Cryptocurrency" },
-  { id: "7", symbol: "ETH", name: "Ethereum", type: "Cryptocurrency" },
-  {
-    id: "8",
-    symbol: "VTI",
-    name: "Vanguard Total Stock Market ETF",
-    type: "Mutual Fund",
-  },
-  {
-    id: "9",
-    symbol: "BND",
-    name: "Vanguard Total Bond Market ETF",
-    type: "Bond",
-  },
-];
 
 const AddAssetScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Filter assets based on search query
-  const filteredAssets = mockAvailableAssets.filter(
-    (asset) =>
-      asset.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      asset.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const { searchAssets, searchResults, searchLoading, clearSearch } =
+    useAssets();
+
+  // Debounced search
+  useEffect(() => {
+    if (searchQuery.trim().length >= 2) {
+      const timeoutId = setTimeout(() => {
+        searchAssets(searchQuery);
+      }, 300);
+
+      return () => clearTimeout(timeoutId);
+    } else {
+      clearSearch();
+    }
+  }, [searchQuery]);
 
   const handleAssetSelect = (asset) => {
     setSelectedAsset(asset);
   };
 
-  const handleAddAsset = () => {
+  const handleAddAsset = async () => {
     if (!selectedAsset) return;
 
-    // Typically make an API call to add the asset to the user's portfolio
-    // For now, just navigate back to Overview
-    navigation.goBack();
+    setLoading(true);
+    try {
+      // Add to user's portfolio
+      const { data, error } = await supabase
+        .from("user_assets")
+        .insert([
+          {
+            user_id: user.id,
+            market_asset_id: selectedAsset.id,
+            asset_type_id: selectedAsset.asset_type_id,
+            symbol: selectedAsset.symbol,
+            name: selectedAsset.name,
+            quantity: 0,
+            average_buy_price: 0,
+          },
+        ])
+        .select();
+
+      if (!error) {
+        navigation.goBack();
+      } else {
+        console.error("Error adding asset:", error);
+      }
+    } catch (error) {
+      console.error("Add asset error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -57,11 +69,19 @@ const AddAssetScreen = ({ navigation }) => {
       {/* Search Bar */}
       <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
+      {/* Loading Indicator for Search */}
+      {searchLoading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color="#3B82F6" />
+        </View>
+      )}
+
       {/* Asset List */}
       <AssetList
-        assets={filteredAssets}
+        assets={searchResults}
         selectedAsset={selectedAsset}
         onAssetSelect={handleAssetSelect}
+        loading={searchLoading}
       />
 
       {/* Add Button */}
