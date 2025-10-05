@@ -43,9 +43,21 @@ const RegisterScreen = ({ navigation }) => {
     setLoading(true);
 
     try {
-      const { error } = await signUp(email, password, username.trim());
+      const { data, error } = await signUp(email, password, username.trim());
       if (error) {
         Alert.alert("Error", error.message);
+      } else {
+        Alert.alert(
+          "Success",
+          data?.message ||
+            "Account created successfully! Please check your email to verify your account.",
+          [
+            {
+              text: "OK",
+              onPress: () => navigation.navigate("Login"),
+            },
+          ]
+        );
       }
     } catch (error) {
       Alert.alert("Error", "An unexpected error occurred");
