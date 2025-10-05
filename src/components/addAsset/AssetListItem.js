@@ -4,8 +4,11 @@ import { MaterialIcons } from "@expo/vector-icons";
 import styles from "./AddAssetScreen.styles";
 
 const AssetListItem = ({ item, isSelected, onSelect }) => {
-  // Get display type from asset_types relationship or fallback to asset_type
-  const displayType = item.asset_types?.name || item.asset_type;
+  const displayType =
+    item.asset_types?.name ||
+    item.market_assets?.asset_types?.name ||
+    item.asset_type ||
+    "Unknown";
 
   return (
     <TouchableOpacity

@@ -8,14 +8,10 @@ export const useRealTimeAssets = (userId) => {
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
 
-  // Fetch user assets from Supabase
   const fetchUserAssets = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) return [];
 
     try {
-      setLoading(true);
-      setError(null);
-
       const { data: userAssets, error: assetsError } = await supabase
         .from("user_assets")
         .select(
@@ -43,12 +39,12 @@ export const useRealTimeAssets = (userId) => {
     }
   }, [userId]);
 
-  // Fetch real-time prices and enrich assets
+  // Fetch real-time prices and calculate portfolio values
   const fetchRealTimePrices = useCallback(async (userAssets) => {
     if (!userAssets || userAssets.length === 0) return [];
 
     try {
-      // Extract unique symbols
+      // Extract unique symbols from market_assets
       const symbols = [
         ...new Set(
           userAssets.map((asset) => asset.market_assets?.symbol).filter(Boolean)
@@ -57,13 +53,13 @@ export const useRealTimeAssets = (userId) => {
 
       if (symbols.length === 0) return userAssets;
 
-      // Fetch current prices
+      // Fetch current prices from TwelveData API
       const prices = await twelvedataAPI.getMultiplePrices(symbols);
 
-      // Enrich assets with real-time data
+      // Enrich assets with real-time data and calculations
       const enrichedAssets = userAssets.map((asset) => {
-        const symbol = asset.market_assets?.symbol;
-        const currentPrice = prices[symbol] || asset.current_price || 0;
+        const symbol = asset.market_assets?.symbol || asset.symbol;
+        const currentPrice = prices[symbol] || 0;
         const totalValue = currentPrice * asset.quantity;
         const totalCost = asset.average_buy_price * asset.quantity;
         const profitLoss = totalValue - totalCost;
@@ -91,6 +87,7 @@ export const useRealTimeAssets = (userId) => {
   // Load assets and prices
   const loadAssets = useCallback(async () => {
     try {
+      setLoading(true);
       const userAssets = await fetchUserAssets();
       const enrichedAssets = await fetchRealTimePrices(userAssets);
 
@@ -106,23 +103,26 @@ export const useRealTimeAssets = (userId) => {
 
   // Refresh assets
   const refreshAssets = useCallback(async () => {
-    setLoading(true);
     await loadAssets();
   }, [loadAssets]);
 
   // Initial load
   useEffect(() => {
-    loadAssets();
-  }, [loadAssets]);
+    if (userId) {
+      loadAssets();
+    }
+  }, [userId, loadAssets]);
 
-  // Auto-refresh every 5 minutes
+  // Auto-refresh every 5 minutes when user is logged in
   useEffect(() => {
+    if (!userId) return;
+
     const interval = setInterval(() => {
       loadAssets();
     }, 5 * 60 * 1000); // 5 minutes
 
     return () => clearInterval(interval);
-  }, [loadAssets]);
+  }, [userId, loadAssets]);
 
   return {
     assets,

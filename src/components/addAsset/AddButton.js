@@ -7,7 +7,7 @@ const AddButton = ({ selectedAsset, loading, onAddAsset }) => {
   return (
     <View style={styles.footer}>
       <TouchableOpacity
-        style={styles.addButton}
+        style={[styles.addButton, loading && styles.disabledButton]}
         onPress={onAddAsset}
         disabled={loading}
       >

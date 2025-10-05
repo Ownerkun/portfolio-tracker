@@ -1,3 +1,4 @@
+// components/addAsset/AddAssetScreen.styles.js
 import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
@@ -21,6 +22,20 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     fontSize: 16,
     color: "#1A1A1A",
+  },
+  searchLoadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    backgroundColor: "#FFFFFF",
+    marginHorizontal: 16,
+    borderRadius: 8,
+  },
+  searchLoadingText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: "#6C757D",
   },
   listContent: {
     flexGrow: 1,
@@ -117,6 +132,9 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     color: "#6C757D",
+  },
+  disabledButton: {
+    backgroundColor: "#9CA3AF",
   },
 });
 

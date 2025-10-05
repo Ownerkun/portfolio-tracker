@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,9 @@ import {
   RefreshControl,
 } from "react-native";
 import { useAuth } from "../AuthContext";
+import { supabase } from "../services/supabase/supabase";
 import { useRealTimeAssets } from "../hooks/useRealTimeAssets";
+import { useFocusEffect } from "@react-navigation/native";
 import PortfolioStats from "../components/overview/PortfolioStats";
 import AssetAllocationChart from "../components/overview/AssetAllocationChart";
 import AssetCard from "../components/overview/AssetCard";
@@ -18,6 +20,13 @@ const OverviewScreen = ({ navigation }) => {
   const { user, profile } = useAuth();
   const { assets, loading, refreshAssets, lastUpdated } = useRealTimeAssets(
     user?.id
+  );
+  const [refreshing, setRefreshing] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshAssets();
+    }, [refreshAssets])
   );
 
   const handleAssetPress = (asset) => {
@@ -38,7 +47,6 @@ const OverviewScreen = ({ navigation }) => {
 
   const handleRemoveAsset = async (assetId) => {
     try {
-      // Remove asset from database
       const { error } = await supabase
         .from("user_assets")
         .delete()

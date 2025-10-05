@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { View, ActivityIndicator, Text } from "react-native";
+import { View, ActivityIndicator, Text, Alert } from "react-native";
 import { useAssets } from "../../AssetContext";
+import { useAuth } from "../../AuthContext";
+import { supabase } from "../../services/supabase/supabase";
 import SearchBar from "../../components/addAsset/SearchBar";
 import AssetList from "../../components/addAsset/AssetList";
 import AddButton from "../../components/addAsset/AddButton";
@@ -12,10 +14,10 @@ const AddAssetScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [displayAssets, setDisplayAssets] = useState([]);
 
+  const { user } = useAuth();
   const {
     assets,
     searchAssets,
-    searchResults,
     searchLoading,
     clearSearch,
     loading: assetsLoading,
@@ -24,7 +26,6 @@ const AddAssetScreen = ({ navigation }) => {
   // Load initial assets when component mounts
   useEffect(() => {
     if (assets && assets.length > 0) {
-      // Show top 50 assets initially, sorted by symbol
       setDisplayAssets(assets.slice(0, 50));
     }
   }, [assets]);
@@ -40,15 +41,15 @@ const AddAssetScreen = ({ navigation }) => {
 
       return () => clearTimeout(timeoutId);
     } else {
-      // Reset to initial list when search is cleared
       clearSearch();
-      setDisplayAssets(assets.slice(0, 50));
+      if (assets && assets.length > 0) {
+        setDisplayAssets(assets.slice(0, 50));
+      }
       setSelectedAsset(null);
     }
   }, [searchQuery, assets]);
 
   const handleAssetSelect = (asset) => {
-    // Toggle selection - if same asset clicked, unselect it
     if (selectedAsset?.id === asset.id) {
       setSelectedAsset(null);
     } else {
@@ -57,33 +58,60 @@ const AddAssetScreen = ({ navigation }) => {
   };
 
   const handleAddAsset = async () => {
-    if (!selectedAsset) return;
+    if (!selectedAsset || !user) return;
 
     setLoading(true);
     try {
-      // Add to user's portfolio
+      // Check if asset already exists in user's portfolio
+      const { data: existingAssets, error: checkError } = await supabase
+        .from("user_assets")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("market_asset_id", selectedAsset.id);
+
+      if (checkError) throw checkError;
+
+      if (existingAssets && existingAssets.length > 0) {
+        Alert.alert(
+          "Asset Already Exists",
+          `${selectedAsset.symbol} is already in your portfolio.`,
+          [{ text: "OK" }]
+        );
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("user_assets")
         .insert([
           {
             user_id: user.id,
             market_asset_id: selectedAsset.id,
-            asset_type_id: selectedAsset.asset_type_id,
             symbol: selectedAsset.symbol,
             name: selectedAsset.name,
             quantity: 0,
-            average_buy_price: 0,
+            average_buy_price: 0, // Will be calculated when transactions are added
           },
         ])
         .select();
 
-      if (!error) {
-        navigation.goBack();
-      } else {
-        console.error("Error adding asset:", error);
-      }
+      if (error) throw error;
+
+      Alert.alert(
+        "Success",
+        `${selectedAsset.symbol} has been added to your portfolio!`,
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.goBack(),
+          },
+        ]
+      );
     } catch (error) {
-      console.error("Add asset error:", error);
+      console.error("Error adding asset:", error);
+      Alert.alert("Error", "Failed to add asset. Please try again.", [
+        { text: "OK" },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -103,26 +131,21 @@ const AddAssetScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Search Bar */}
       <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
-      {/* Loading Indicator for Search */}
       {searchLoading && (
         <View style={styles.searchLoadingContainer}>
           <ActivityIndicator size="small" color="#3B82F6" />
+          <Text style={styles.searchLoadingText}>Searching...</Text>
         </View>
       )}
 
-      {/* Asset List */}
       <AssetList
         assets={displayAssets}
         selectedAsset={selectedAsset}
         onAssetSelect={handleAssetSelect}
-        loading={searchLoading}
-        searchQuery={searchQuery}
       />
 
-      {/* Add Button */}
       {selectedAsset && (
         <AddButton
           selectedAsset={selectedAsset}

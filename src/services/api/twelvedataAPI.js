@@ -4,7 +4,7 @@ export const twelvedataAPI = {
       if (!symbols || symbols.length === 0) return {};
 
       const symbolString = symbols.join(",");
-      const apiKey = process.env.EXPO_PUBLIC_TWELVEDATA_API_KEY || "demo"; // Use your actual API key
+      const apiKey = process.env.EXPO_PUBLIC_TWELVEDATA_API_KEY || "demo";
 
       const response = await fetch(
         `https://api.twelvedata.com/price?symbol=${symbolString}&apikey=${apiKey}`
