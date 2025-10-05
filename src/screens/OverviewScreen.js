@@ -1,16 +1,24 @@
-// OverviewScreen.js (updated)
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  RefreshControl,
+} from "react-native";
 import { useAuth } from "../AuthContext";
-import { enrichedMockAssets } from "../data/mockData";
+import { useRealTimeAssets } from "../hooks/useRealTimeAssets";
 import PortfolioStats from "../components/overview/PortfolioStats";
 import AssetAllocationChart from "../components/overview/AssetAllocationChart";
 import AssetCard from "../components/overview/AssetCard";
 import AddAssetButton from "../components/overview/AddAssetButton";
 
 const OverviewScreen = ({ navigation }) => {
-  const { profile } = useAuth();
-  const [assets, setAssets] = useState(enrichedMockAssets);
+  const { user, profile } = useAuth();
+  const { assets, loading, refreshAssets, lastUpdated } = useRealTimeAssets(
+    user?.id
+  );
 
   const handleAssetPress = (asset) => {
     navigation.navigate("AssetDetail", { asset });
@@ -21,25 +29,42 @@ const OverviewScreen = ({ navigation }) => {
   };
 
   const handleViewTransactions = (asset) => {
-    // Navigate to AssetDetail screen which shows transactions
     navigation.navigate("AssetDetail", { asset });
   };
 
   const handleAddTransaction = (asset) => {
-    // Navigate to AddTransaction screen
     navigation.navigate("AddTransaction", { asset });
   };
 
-  const handleRemoveAsset = (assetId) => {
-    // Remove asset from the list
-    setAssets(assets.filter((asset) => asset.id !== assetId));
+  const handleRemoveAsset = async (assetId) => {
+    try {
+      // Remove asset from database
+      const { error } = await supabase
+        .from("user_assets")
+        .delete()
+        .eq("id", assetId)
+        .eq("user_id", user.id);
 
-    // Show success message
-    Alert.alert(
-      "Asset Removed",
-      "The asset has been removed from your portfolio.",
-      [{ text: "OK" }]
-    );
+      if (error) throw error;
+
+      // Refresh assets list
+      await refreshAssets();
+
+      Alert.alert(
+        "Asset Removed",
+        "The asset has been removed from your portfolio.",
+        [{ text: "OK" }]
+      );
+    } catch (error) {
+      console.error("Error removing asset:", error);
+      Alert.alert("Error", "Failed to remove asset. Please try again.", [
+        { text: "OK" },
+      ]);
+    }
+  };
+
+  const onRefresh = async () => {
+    await refreshAssets();
   };
 
   return (
@@ -48,11 +73,19 @@ const OverviewScreen = ({ navigation }) => {
       <View style={styles.header}>
         <Text style={styles.title}>Portfolio</Text>
         {profile && <Text style={styles.welcomeText}>{profile.username}</Text>}
+        {lastUpdated && (
+          <Text style={styles.lastUpdated}>
+            Last updated: {lastUpdated.toLocaleTimeString()}
+          </Text>
+        )}
       </View>
 
       <ScrollView
         style={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={onRefresh} />
+        }
       >
         {/* Portfolio Summary Cards */}
         <PortfolioStats />
@@ -67,7 +100,6 @@ const OverviewScreen = ({ navigation }) => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Holdings</Text>
-            {/* Add Asset Button */}
             <AddAssetButton onPress={handleAddAsset} />
           </View>
 
@@ -82,6 +114,15 @@ const OverviewScreen = ({ navigation }) => {
               onRemoveAsset={handleRemoveAsset}
             />
           ))}
+
+          {assets.length === 0 && !loading && (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No assets in your portfolio</Text>
+              <Text style={styles.emptySubtext}>
+                Add your first asset to get started
+              </Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.bottomSpacing} />
@@ -118,6 +159,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontWeight: "500",
   },
+  lastUpdated: {
+    fontSize: 12,
+    color: "#6C757D",
+    marginTop: 2,
+  },
   section: {
     backgroundColor: "#FFFFFF",
     marginHorizontal: 16,
@@ -137,6 +183,20 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#1A1A1A",
     letterSpacing: -0.3,
+  },
+  emptyState: {
+    alignItems: "center",
+    padding: 32,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#6C757D",
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: "#6C757D",
   },
   bottomSpacing: {
     height: 20,

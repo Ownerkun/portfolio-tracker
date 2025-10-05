@@ -88,8 +88,17 @@ const AssetCard = ({
 
         {/* Asset Info */}
         <View style={styles.assetInfo}>
-          <Text style={styles.symbol}>{asset.symbol}</Text>
-          <Text style={styles.assetType}>{asset.asset_type?.name}</Text>
+          <Text style={styles.symbol}>
+            {asset.market_assets?.symbol || asset.symbol}
+          </Text>
+          <Text style={styles.assetType}>
+            {asset.asset_type?.name ||
+              asset.market_assets?.asset_types?.name ||
+              "Unknown"}
+          </Text>
+          <Text style={styles.assetName}>
+            {asset.market_assets?.name || asset.name}
+          </Text>
         </View>
 
         {/* Values */}
@@ -194,6 +203,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     letterSpacing: -0.1,
+  },
+  assetName: {
+    fontSize: 12,
+    color: "#6C757D",
+    marginTop: 2,
   },
 });
 

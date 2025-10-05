@@ -1,9 +1,33 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import PortfolioSummaryCard from "./PortfolioSummaryCard";
-import { calculatePortfolioSummary } from "../../data/mockData";
+import { useRealTimeAssets } from "../../hooks/useRealTimeAssets";
+import { useAuth } from "../../AuthContext";
 
 const PortfolioStats = () => {
+  const { user } = useAuth();
+  const { assets } = useRealTimeAssets(user?.id);
+
+  const calculatePortfolioSummary = () => {
+    const totalValue = assets.reduce(
+      (sum, asset) => sum + (asset.total_value || 0),
+      0
+    );
+    const totalCost = assets.reduce(
+      (sum, asset) => sum + (asset.average_buy_price * asset.quantity || 0),
+      0
+    );
+    const totalProfitLoss = totalValue - totalCost;
+    const totalProfitLossPercentage =
+      totalCost > 0 ? (totalProfitLoss / totalCost) * 100 : 0;
+
+    return {
+      totalValue,
+      totalProfitLoss,
+      totalProfitLossPercentage,
+    };
+  };
+
   const portfolioSummary = calculatePortfolioSummary();
 
   return (

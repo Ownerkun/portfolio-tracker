@@ -1,31 +1,37 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { PieChart } from "react-native-chart-kit";
-import { enrichedMockAssets, mockAssetTypes } from "../../data/mockData";
+import { useRealTimeAssets } from "../../hooks/useRealTimeAssets";
+import { useAuth } from "../../AuthContext";
 
 const AssetAllocationChart = () => {
+  const { user } = useAuth();
+  const { assets } = useRealTimeAssets(user?.id);
+
   const calculateAllocationData = () => {
-    const allocationByType = mockAssetTypes
-      .map((type) => {
-        const typeAssets = enrichedMockAssets.filter(
-          (asset) => asset.asset_type_id === type.id
-        );
-        const typeValue = typeAssets.reduce(
-          (sum, asset) => sum + (asset.total_value || 0),
-          0
-        );
+    const allocationByType = assets.reduce((acc, asset) => {
+      const typeName = asset.asset_type?.name || "Unknown";
+      const typeValue = asset.total_value || 0;
 
-        return {
-          name: type.name,
-          value: typeValue,
-          color: getColorForType(type.name),
-          legendFontColor: "#6C757D",
-          legendFontSize: 13,
+      if (!acc[typeName]) {
+        acc[typeName] = {
+          name: typeName,
+          value: 0,
+          color: getColorForType(typeName),
         };
-      })
-      .filter((item) => item.value > 0);
+      }
 
-    return allocationByType;
+      acc[typeName].value += typeValue;
+      return acc;
+    }, {});
+
+    return Object.values(allocationByType)
+      .filter((item) => item.value > 0)
+      .map((item) => ({
+        ...item,
+        legendFontColor: "#6C757D",
+        legendFontSize: 13,
+      }));
   };
 
   const getColorForType = (typeName) => {
@@ -36,6 +42,8 @@ const AssetAllocationChart = () => {
       Bond: "#10B981",
       "Real Estate": "#EC4899",
       Commodity: "#EF4444",
+      ETF: "#8B5CF6",
+      "Index Fund": "#6366F1",
     };
     return colors[typeName] || "#6C757D";
   };
