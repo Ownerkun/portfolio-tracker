@@ -90,7 +90,8 @@ const AddAssetScreen = ({ navigation }) => {
             symbol: selectedAsset.symbol,
             name: selectedAsset.name,
             quantity: 0,
-            average_buy_price: 0, // Will be calculated when transactions are added
+            average_buy_price: 0,
+            asset_type_id: selectedAsset.asset_type_id,
           },
         ])
         .select();
@@ -109,9 +110,15 @@ const AddAssetScreen = ({ navigation }) => {
       );
     } catch (error) {
       console.error("Error adding asset:", error);
-      Alert.alert("Error", "Failed to add asset. Please try again.", [
-        { text: "OK" },
-      ]);
+
+      let errorMessage = "Failed to add asset. Please try again.";
+      if (error.code === "23502") {
+        errorMessage = "Required fields are missing. Please try again.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      Alert.alert("Error", errorMessage);
     } finally {
       setLoading(false);
     }

@@ -10,6 +10,7 @@ const TransactionActions = ({
   onSubmit,
   onCancel,
   disabled,
+  loading = false,
 }) => {
   const isBuyMode = transactionMode === "buy";
   const themeColor = isBuyMode ? "#10B981" : "#EF4444";
@@ -21,6 +22,7 @@ const TransactionActions = ({
           <TouchableOpacity
             style={[styles.actionButton, styles.cancelButton]}
             onPress={onCancel}
+            disabled={loading}
             activeOpacity={0.7}
           >
             <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -32,21 +34,27 @@ const TransactionActions = ({
             styles.actionButton,
             styles.submitButton,
             { backgroundColor: themeColor },
-            disabled && styles.actionButtonDisabled,
+            (disabled || loading) && styles.actionButtonDisabled,
           ]}
           onPress={onSubmit}
-          disabled={disabled}
+          disabled={disabled || loading}
           activeOpacity={0.7}
         >
-          <MaterialIcons
-            name={isBuyMode ? "add" : "remove"}
-            size={20}
-            color="#FFFFFF"
-          />
-          <Text style={styles.actionButtonText}>
-            {mode === "edit" ? "Update" : isBuyMode ? "Buy" : "Sell"}{" "}
-            {asset.symbol}
-          </Text>
+          {loading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <>
+              <MaterialIcons
+                name={isBuyMode ? "add" : "remove"}
+                size={20}
+                color="#FFFFFF"
+              />
+              <Text style={styles.actionButtonText}>
+                {mode === "edit" ? "Update" : isBuyMode ? "Buy" : "Sell"}{" "}
+                {asset.symbol}
+              </Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </View>

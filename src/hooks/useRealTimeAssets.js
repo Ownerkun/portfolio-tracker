@@ -73,6 +73,7 @@ export const useRealTimeAssets = (userId) => {
           profit_loss: profitLoss,
           profit_loss_percentage: profitLossPercentage,
           asset_type: asset.market_assets?.asset_types,
+          transaction_count: asset.transactions?.length || 0,
         };
       });
 
@@ -83,6 +84,25 @@ export const useRealTimeAssets = (userId) => {
       return userAssets; // Return original assets if price fetch fails
     }
   }, []);
+
+  const fetchAssetTransactions = async (assetId, userId) => {
+    if (!userId) return [];
+
+    try {
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("*")
+        .eq("asset_id", assetId)
+        .eq("user_id", userId)
+        .order("transaction_date", { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      console.error("Error fetching transactions:", err);
+      return [];
+    }
+  };
 
   // Load assets and prices
   const loadAssets = useCallback(async () => {

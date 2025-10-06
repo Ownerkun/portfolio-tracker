@@ -1,7 +1,14 @@
-import React, { useState } from "react";
-import { ScrollView, View, TouchableOpacity, Alert } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  ScrollView,
+  View,
+  TouchableOpacity,
+  Alert,
+  RefreshControl,
+} from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { mockTransactions } from "../../data/mockData";
+import { useAuth } from "../../AuthContext";
+import { supabase } from "../../services/supabase/supabase";
 import TransactionList from "../../components/transaction/TransactionList";
 import AssetHeader from "../../components/assetDetail/AssetHeader";
 import AssetDetailsGrid from "../../components/assetDetail/AssetDetailsGrid";
@@ -9,9 +16,67 @@ import styles from "../../components/assetDetail/AssetDetailScreen.styles";
 
 const AssetDetailScreen = ({ route, navigation }) => {
   const { asset } = route.params;
-  const [transactions, setTransactions] = useState(
-    mockTransactions.filter((t) => t.asset_id === asset.id)
-  );
+  const { user } = useAuth();
+  const [transactions, setTransactions] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [assetWithRealTimeData, setAssetWithRealTimeData] = useState(asset);
+
+  const fetchTransactions = useCallback(async () => {
+    if (!user || !asset.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("*")
+        .eq("asset_id", asset.id)
+        .eq("user_id", user.id)
+        .order("transaction_date", { ascending: false });
+
+      if (error) throw error;
+      setTransactions(data || []);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      Alert.alert("Error", "Failed to load transactions");
+    }
+  }, [user, asset.id]);
+
+  const fetchAssetWithRealTimeData = useCallback(async () => {
+    if (!user || !asset.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("user_assets")
+        .select(
+          `
+          *,
+          market_assets (
+            symbol,
+            name,
+            asset_type_id,
+            asset_types (name)
+          )
+        `
+        )
+        .eq("id", asset.id)
+        .eq("user_id", user.id)
+        .single();
+
+      if (error) throw error;
+      if (data) setAssetWithRealTimeData(data);
+    } catch (error) {
+      console.error("Error fetching asset data:", error);
+    }
+  }, [user, asset.id]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([fetchTransactions(), fetchAssetWithRealTimeData()]);
+    setRefreshing(false);
+  }, [fetchTransactions, fetchAssetWithRealTimeData]);
+
+  useEffect(() => {
+    onRefresh();
+  }, [onRefresh]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
@@ -22,7 +87,7 @@ const AssetDetailScreen = ({ route, navigation }) => {
   };
 
   const formatPercentage = (value) => {
-    return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
+    return `${value >= 0 ? "+" : ""}${value?.toFixed(2) || "0.00"}%`;
   };
 
   const formatDate = (dateString) => {
@@ -34,27 +99,61 @@ const AssetDetailScreen = ({ route, navigation }) => {
   };
 
   const handleAddTransaction = () => {
-    navigation.navigate("AddTransaction", { asset });
+    navigation.navigate("AddTransaction", { asset: assetWithRealTimeData });
   };
 
   const handleEditTransaction = (transaction) => {
     navigation.navigate("EditTransaction", {
-      asset,
+      asset: assetWithRealTimeData,
       transaction,
     });
   };
 
-  const handleDeleteTransaction = (transactionId) => {
+  const handleDeleteTransaction = async (transactionId) => {
     Alert.alert(
       "Delete Transaction",
-      "Are you sure you want to delete this transaction?",
+      "Are you sure you want to delete this transaction? This action cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => {
-            setTransactions(transactions.filter((t) => t.id !== transactionId));
+          onPress: async () => {
+            try {
+              setRefreshing(true);
+
+              const { error } = await supabase
+                .from("transactions")
+                .delete()
+                .eq("id", transactionId)
+                .eq("user_id", user.id);
+
+              if (error) throw error;
+
+              // Refresh transactions list and asset data
+              await Promise.all([
+                fetchTransactions(),
+                fetchAssetWithRealTimeData(),
+              ]);
+
+              Alert.alert("Success", "Transaction deleted successfully");
+            } catch (error) {
+              console.error("Error deleting transaction:", error);
+
+              let errorMessage = "Failed to delete transaction";
+              if (error.code === "23503") {
+                errorMessage =
+                  "Cannot delete transaction due to database constraints";
+              } else if (error.code === "23502") {
+                errorMessage = "Database constraint error. Please try again.";
+              } else if (error.message) {
+                errorMessage = error.message;
+              }
+
+              Alert.alert("Error", errorMessage);
+            } finally {
+              setRefreshing(false);
+            }
           },
         },
       ]
@@ -66,16 +165,22 @@ const AssetDetailScreen = ({ route, navigation }) => {
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         {/* Asset Header */}
         <AssetHeader
-          asset={asset}
+          asset={assetWithRealTimeData}
           formatCurrency={formatCurrency}
           formatPercentage={formatPercentage}
         />
 
         {/* Asset Details Grid */}
-        <AssetDetailsGrid asset={asset} formatCurrency={formatCurrency} />
+        <AssetDetailsGrid
+          asset={assetWithRealTimeData}
+          formatCurrency={formatCurrency}
+        />
 
         {/* Transactions Section */}
         <TransactionList
