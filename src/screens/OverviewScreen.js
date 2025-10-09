@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useAuth } from "../AuthContext";
 import { supabase } from "../services/supabase/supabase";
-import { useRealTimeAssets } from "../hooks/useRealTimeAssets";
+import { useAssets } from "../AssetContext";
 import { useFocusEffect } from "@react-navigation/native";
 import PortfolioStats from "../components/overview/PortfolioStats";
 import AssetAllocationChart from "../components/overview/AssetAllocationChart";
@@ -18,16 +18,29 @@ import AddAssetButton from "../components/overview/AddAssetButton";
 
 const OverviewScreen = ({ navigation }) => {
   const { user, profile } = useAuth();
-  const { assets, loading, refreshAssets, lastUpdated } = useRealTimeAssets(
-    user?.id
-  );
+  const {
+    userAssets,
+    pricesLoading,
+    lastPriceUpdate,
+    refreshUserAssets,
+    refreshPrices,
+  } = useAssets();
   const [refreshing, setRefreshing] = useState(false);
 
+  // Refresh prices when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      refreshAssets();
-    }, [refreshAssets])
+      if (user) {
+        refreshPrices(); // Only refresh prices, not the entire user assets
+      }
+    }, [user, refreshPrices])
   );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refreshUserAssets(); // Full refresh on pull-to-refresh
+    setRefreshing(false);
+  };
 
   const handleAssetPress = (asset) => {
     navigation.navigate("AssetDetail", { asset });
@@ -55,8 +68,8 @@ const OverviewScreen = ({ navigation }) => {
 
       if (error) throw error;
 
-      // Refresh assets list
-      await refreshAssets();
+      // Refresh assets list using AssetContext
+      await refreshUserAssets();
 
       Alert.alert(
         "Asset Removed",
@@ -71,19 +84,15 @@ const OverviewScreen = ({ navigation }) => {
     }
   };
 
-  const onRefresh = async () => {
-    await refreshAssets();
-  };
-
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Portfolio</Text>
         {profile && <Text style={styles.welcomeText}>{profile.username}</Text>}
-        {lastUpdated && (
+        {lastPriceUpdate && (
           <Text style={styles.lastUpdated}>
-            Last updated: {lastUpdated.toLocaleTimeString()}
+            Last updated: {lastPriceUpdate.toLocaleTimeString()}
           </Text>
         )}
       </View>
@@ -92,16 +101,16 @@ const OverviewScreen = ({ navigation }) => {
         style={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={onRefresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Portfolio Summary Cards */}
-        <PortfolioStats />
+        {/* Portfolio Summary Cards - Pass userAssets as prop */}
+        <PortfolioStats userAssets={userAssets} />
 
-        {/* Asset Allocation */}
+        {/* Asset Allocation - Pass userAssets as prop */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Allocation</Text>
-          <AssetAllocationChart />
+          <AssetAllocationChart userAssets={userAssets} />
         </View>
 
         {/* Assets List */}
@@ -111,8 +120,8 @@ const OverviewScreen = ({ navigation }) => {
             <AddAssetButton onPress={handleAddAsset} />
           </View>
 
-          {/* Assets List */}
-          {assets.map((asset) => (
+          {/* Assets List - Using userAssets from AssetContext */}
+          {userAssets.map((asset) => (
             <AssetCard
               key={asset.id}
               asset={asset}
@@ -123,7 +132,7 @@ const OverviewScreen = ({ navigation }) => {
             />
           ))}
 
-          {assets.length === 0 && !loading && (
+          {userAssets.length === 0 && !pricesLoading && (
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>No assets in your portfolio</Text>
               <Text style={styles.emptySubtext}>

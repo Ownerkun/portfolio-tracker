@@ -9,14 +9,16 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../../AuthContext";
 import { supabase } from "../../services/supabase/supabase";
-import TransactionList from "../../components/transaction/TransactionList";
+import { useAssets } from "../../AssetContext";
 import AssetHeader from "../../components/assetDetail/AssetHeader";
 import AssetDetailsGrid from "../../components/assetDetail/AssetDetailsGrid";
 import styles from "../../components/assetDetail/AssetDetailScreen.styles";
+import TransactionList from "../../components/transaction/TransactionList";
 
 const AssetDetailScreen = ({ route, navigation }) => {
   const { asset } = route.params;
   const { user } = useAuth();
+  const { refreshUserAssets } = useAssets();
   const [transactions, setTransactions] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [assetWithRealTimeData, setAssetWithRealTimeData] = useState(asset);
@@ -44,29 +46,15 @@ const AssetDetailScreen = ({ route, navigation }) => {
     if (!user || !asset.id) return;
 
     try {
-      const { data, error } = await supabase
-        .from("user_assets")
-        .select(
-          `
-          *,
-          market_assets (
-            symbol,
-            name,
-            asset_type_id,
-            asset_types (name)
-          )
-        `
-        )
-        .eq("id", asset.id)
-        .eq("user_id", user.id)
-        .single();
+      // Refresh the entire portfolio to get updated data
+      await refreshUserAssets();
 
-      if (error) throw error;
-      if (data) setAssetWithRealTimeData(data);
+      // The updated asset data will be in the AssetContext
+      // We'll rely on the parent to pass the correct data
     } catch (error) {
       console.error("Error fetching asset data:", error);
     }
-  }, [user, asset.id]);
+  }, [user, asset.id, refreshUserAssets]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -76,7 +64,7 @@ const AssetDetailScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     onRefresh();
-  }, [onRefresh]);
+  }, []);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
@@ -130,27 +118,12 @@ const AssetDetailScreen = ({ route, navigation }) => {
 
               if (error) throw error;
 
-              // Refresh transactions list and asset data
-              await Promise.all([
-                fetchTransactions(),
-                fetchAssetWithRealTimeData(),
-              ]);
+              // Refresh transactions list and asset data using AssetContext
+              await Promise.all([fetchTransactions(), refreshUserAssets()]);
 
               Alert.alert("Success", "Transaction deleted successfully");
             } catch (error) {
               console.error("Error deleting transaction:", error);
-
-              let errorMessage = "Failed to delete transaction";
-              if (error.code === "23503") {
-                errorMessage =
-                  "Cannot delete transaction due to database constraints";
-              } else if (error.code === "23502") {
-                errorMessage = "Database constraint error. Please try again.";
-              } else if (error.message) {
-                errorMessage = error.message;
-              }
-
-              Alert.alert("Error", errorMessage);
             } finally {
               setRefreshing(false);
             }

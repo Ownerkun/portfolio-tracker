@@ -1,19 +1,15 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import PortfolioSummaryCard from "./PortfolioSummaryCard";
-import { useRealTimeAssets } from "../../hooks/useRealTimeAssets";
-import { useAuth } from "../../AuthContext";
 
-const PortfolioStats = () => {
-  const { user } = useAuth();
-  const { assets } = useRealTimeAssets(user?.id);
-
+const PortfolioStats = ({ userAssets }) => {
+  // Receive userAssets as prop
   const calculatePortfolioSummary = () => {
-    const totalValue = assets.reduce(
+    const totalValue = userAssets.reduce(
       (sum, asset) => sum + (asset.total_value || 0),
       0
     );
-    const totalCost = assets.reduce(
+    const totalCost = userAssets.reduce(
       (sum, asset) => sum + (asset.average_buy_price * asset.quantity || 0),
       0
     );

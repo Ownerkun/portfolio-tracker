@@ -1,15 +1,11 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { PieChart } from "react-native-chart-kit";
-import { useRealTimeAssets } from "../../hooks/useRealTimeAssets";
-import { useAuth } from "../../AuthContext";
 
-const AssetAllocationChart = () => {
-  const { user } = useAuth();
-  const { assets } = useRealTimeAssets(user?.id);
-
+const AssetAllocationChart = ({ userAssets }) => {
+  // Receive userAssets as prop
   const calculateAllocationData = () => {
-    const allocationByType = assets.reduce((acc, asset) => {
+    const allocationByType = userAssets.reduce((acc, asset) => {
       const typeName = asset.asset_type?.name || "Unknown";
       const typeValue = asset.total_value || 0;
 
