@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { Alert } from "react-native";
 import { useAuth } from "../../AuthContext";
 import { supabase } from "../../services/supabase/supabase";
+import { useAssets } from "../../AssetContext";
 import TransactionForm from "../../components/transaction/TransactionForm";
 
 const EditTransactionScreen = ({ route, navigation }) => {
   const { asset, transaction } = route.params;
   const { user } = useAuth();
+  const { refreshUserAssets } = useAssets(); // ADD THIS
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (updatedTransaction) => {
@@ -17,7 +19,6 @@ const EditTransactionScreen = ({ route, navigation }) => {
 
     setLoading(true);
     try {
-      // Update the existing transaction instead of delete+insert
       const { data, error } = await supabase
         .from("transactions")
         .update({
@@ -36,6 +37,8 @@ const EditTransactionScreen = ({ route, navigation }) => {
 
       if (error) throw error;
 
+      await refreshUserAssets();
+
       Alert.alert(
         "Success",
         `Transaction for ${asset.symbol} updated successfully`,
@@ -49,7 +52,6 @@ const EditTransactionScreen = ({ route, navigation }) => {
     } catch (error) {
       console.error("Error updating transaction:", error);
 
-      // More specific error handling
       if (error.code === "23514") {
         Alert.alert(
           "Error",

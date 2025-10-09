@@ -68,6 +68,15 @@ const AssetDetailScreen = ({ route, navigation }) => {
     );
   }, [transactions, refreshing]);
 
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      fetchAssetWithRealTimeData();
+      fetchTransactions();
+    });
+
+    return unsubscribe;
+  }, [navigation, fetchAssetWithRealTimeData, fetchTransactions]);
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
