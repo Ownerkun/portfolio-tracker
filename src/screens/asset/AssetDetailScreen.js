@@ -63,8 +63,10 @@ const AssetDetailScreen = ({ route, navigation }) => {
   }, [fetchTransactions, fetchAssetWithRealTimeData]);
 
   useEffect(() => {
-    onRefresh();
-  }, []);
+    console.log(
+      `State updated - transactions: ${transactions.length}, refreshing: ${refreshing}`
+    );
+  }, [transactions, refreshing]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {

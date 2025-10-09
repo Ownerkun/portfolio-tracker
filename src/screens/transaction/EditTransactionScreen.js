@@ -17,33 +17,24 @@ const EditTransactionScreen = ({ route, navigation }) => {
 
     setLoading(true);
     try {
-      const { error: deleteError } = await supabase
+      // Update the existing transaction instead of delete+insert
+      const { data, error } = await supabase
         .from("transactions")
-        .delete()
+        .update({
+          transaction_type: updatedTransaction.transaction_type,
+          quantity: updatedTransaction.quantity,
+          price_per_unit: updatedTransaction.price_per_unit,
+          total_amount: updatedTransaction.total_amount,
+          fees: updatedTransaction.fees,
+          transaction_date: updatedTransaction.transaction_date,
+          notes: updatedTransaction.notes,
+        })
         .eq("id", transaction.id)
-        .eq("user_id", user.id);
-
-      if (deleteError) throw deleteError;
-
-      const { data, error: insertError } = await supabase
-        .from("transactions")
-        .insert([
-          {
-            user_id: user.id,
-            asset_id: asset.id,
-            transaction_type: updatedTransaction.transaction_type,
-            quantity: updatedTransaction.quantity,
-            price_per_unit: updatedTransaction.price_per_unit,
-            total_amount: updatedTransaction.total_amount,
-            fees: updatedTransaction.fees,
-            transaction_date: updatedTransaction.transaction_date,
-            notes: updatedTransaction.notes,
-          },
-        ])
+        .eq("user_id", user.id)
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (error) throw error;
 
       Alert.alert(
         "Success",
@@ -57,10 +48,19 @@ const EditTransactionScreen = ({ route, navigation }) => {
       );
     } catch (error) {
       console.error("Error updating transaction:", error);
-      Alert.alert(
-        "Error",
-        error.message || "Failed to update transaction. Please try again."
-      );
+
+      // More specific error handling
+      if (error.code === "23514") {
+        Alert.alert(
+          "Error",
+          "Invalid transaction data. Please check that all values are valid."
+        );
+      } else {
+        Alert.alert(
+          "Error",
+          error.message || "Failed to update transaction. Please try again."
+        );
+      }
     } finally {
       setLoading(false);
     }

@@ -221,6 +221,9 @@ export const AssetsProvider = ({ children }) => {
           ),
         ];
 
+        // Debug Log
+        console.log("Assets" + symbols);
+
         if (symbols.length === 0) {
           setUserAssetsWithPrices(assetsToUpdate);
           return assetsToUpdate;
@@ -228,6 +231,9 @@ export const AssetsProvider = ({ children }) => {
 
         // Fetch current prices
         const prices = await twelvedataAPI.getMultiplePrices(symbols);
+        console.log(
+          `API returned prices for ${Object.keys(prices).length} symbols`
+        );
 
         // Enrich assets with real-time data
         const enrichedAssets = assetsToUpdate.map((asset) => {
@@ -251,6 +257,7 @@ export const AssetsProvider = ({ children }) => {
 
         setUserAssetsWithPrices(enrichedAssets);
         setLastPriceUpdate(new Date());
+        console.log(`enriched ${enrichedAssets.length} assets`);
         return enrichedAssets;
       } catch (err) {
         console.error("Error fetching real-time prices:", err);
