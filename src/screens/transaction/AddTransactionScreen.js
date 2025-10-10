@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { Alert } from "react-native";
 import { useAuth } from "../../AuthContext";
 import { supabase } from "../../services/supabase/supabase";
+import { useAssets } from "../../AssetContext";
 import TransactionForm from "../../components/transaction/TransactionForm";
 
 const AddTransactionScreen = ({ route, navigation }) => {
   const { asset } = route.params;
   const { user } = useAuth();
+  const { refreshUserAssets } = useAssets();
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (transactionData) => {
@@ -36,6 +38,8 @@ const AddTransactionScreen = ({ route, navigation }) => {
         .single();
 
       if (error) throw error;
+
+      await refreshUserAssets();
 
       Alert.alert(
         "Success",

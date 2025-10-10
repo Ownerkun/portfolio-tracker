@@ -16,21 +16,86 @@ import styles from "../../components/assetDetail/AssetDetailScreen.styles";
 import TransactionList from "../../components/transaction/TransactionList";
 
 const AssetDetailScreen = ({ route, navigation }) => {
-  const { asset } = route.params;
+  const { asset: initialAsset } = route.params;
   const { user } = useAuth();
-  const { refreshUserAssets } = useAssets();
+  const { refreshUserAssets, userAssets } = useAssets(); // Add userAssets from context
   const [transactions, setTransactions] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [assetWithRealTimeData, setAssetWithRealTimeData] = useState(asset);
+  const [currentAsset, setCurrentAsset] = useState(initialAsset); // Use currentAsset state
+
+  // Function to fetch updated asset data
+  const fetchUpdatedAsset = useCallback(async () => {
+    if (!user || !initialAsset.id) return;
+
+    try {
+      // Get the latest asset data from the database
+      const { data: updatedAsset, error } = await supabase
+        .from("user_assets")
+        .select(
+          `
+          *,
+          market_assets (
+            symbol,
+            name,
+            asset_type_id,
+            asset_types (name)
+          )
+        `
+        )
+        .eq("id", initialAsset.id)
+        .eq("user_id", user.id)
+        .single();
+
+      if (error) throw error;
+
+      if (updatedAsset) {
+        // Also get current price for the asset
+        const symbol = updatedAsset.market_assets?.symbol;
+        let currentPrice = 0;
+
+        if (symbol) {
+          // Find the current price from the context's userAssets
+          const contextAsset = userAssets.find(
+            (a) => a.market_assets?.symbol === symbol || a.symbol === symbol
+          );
+          currentPrice = contextAsset?.current_price || 0;
+        }
+
+        // Calculate derived values
+        const totalValue = currentPrice * updatedAsset.quantity;
+        const totalCost =
+          updatedAsset.average_buy_price * updatedAsset.quantity;
+        const profitLoss = totalValue - totalCost;
+        const profitLossPercentage =
+          totalCost > 0 ? (profitLoss / totalCost) * 100 : 0;
+
+        const enrichedAsset = {
+          ...updatedAsset,
+          current_price: currentPrice,
+          total_value: totalValue,
+          profit_loss: profitLoss,
+          profit_loss_percentage: profitLossPercentage,
+          asset_type: updatedAsset.market_assets?.asset_types,
+          symbol: updatedAsset.market_assets?.symbol || updatedAsset.symbol,
+          name: updatedAsset.market_assets?.name || updatedAsset.name,
+        };
+
+        setCurrentAsset(enrichedAsset);
+        return enrichedAsset;
+      }
+    } catch (error) {
+      console.error("Error fetching updated asset:", error);
+    }
+  }, [user, initialAsset.id, userAssets]);
 
   const fetchTransactions = useCallback(async () => {
-    if (!user || !asset.id) return;
+    if (!user || !initialAsset.id) return;
 
     try {
       const { data, error } = await supabase
         .from("transactions")
         .select("*")
-        .eq("asset_id", asset.id)
+        .eq("asset_id", initialAsset.id)
         .eq("user_id", user.id)
         .order("transaction_date", { ascending: false });
 
@@ -40,42 +105,34 @@ const AssetDetailScreen = ({ route, navigation }) => {
       console.error("Error fetching transactions:", error);
       Alert.alert("Error", "Failed to load transactions");
     }
-  }, [user, asset.id]);
-
-  const fetchAssetWithRealTimeData = useCallback(async () => {
-    if (!user || !asset.id) return;
-
-    try {
-      // Refresh the entire portfolio to get updated data
-      await refreshUserAssets();
-
-      // The updated asset data will be in the AssetContext
-      // We'll rely on the parent to pass the correct data
-    } catch (error) {
-      console.error("Error fetching asset data:", error);
-    }
-  }, [user, asset.id, refreshUserAssets]);
+  }, [user, initialAsset.id]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([fetchTransactions(), fetchAssetWithRealTimeData()]);
+    await Promise.all([
+      fetchTransactions(),
+      fetchUpdatedAsset(),
+      refreshUserAssets(), // Also refresh the global context
+    ]);
     setRefreshing(false);
-  }, [fetchTransactions, fetchAssetWithRealTimeData]);
+  }, [fetchTransactions, fetchUpdatedAsset, refreshUserAssets]);
 
-  useEffect(() => {
-    console.log(
-      `State updated - transactions: ${transactions.length}, refreshing: ${refreshing}`
-    );
-  }, [transactions, refreshing]);
-
+  // Refresh when screen comes into focus
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
-      fetchAssetWithRealTimeData();
+      fetchUpdatedAsset();
       fetchTransactions();
     });
 
     return unsubscribe;
-  }, [navigation, fetchAssetWithRealTimeData, fetchTransactions]);
+  }, [navigation, fetchUpdatedAsset, fetchTransactions]);
+
+  // Also refresh when the route params change
+  useEffect(() => {
+    if (route.params?.asset && route.params.asset.id !== currentAsset.id) {
+      setCurrentAsset(route.params.asset);
+    }
+  }, [route.params?.asset]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
@@ -98,12 +155,12 @@ const AssetDetailScreen = ({ route, navigation }) => {
   };
 
   const handleAddTransaction = () => {
-    navigation.navigate("AddTransaction", { asset: assetWithRealTimeData });
+    navigation.navigate("AddTransaction", { asset: currentAsset });
   };
 
   const handleEditTransaction = (transaction) => {
     navigation.navigate("EditTransaction", {
-      asset: assetWithRealTimeData,
+      asset: currentAsset,
       transaction,
     });
   };
@@ -129,12 +186,17 @@ const AssetDetailScreen = ({ route, navigation }) => {
 
               if (error) throw error;
 
-              // Refresh transactions list and asset data using AssetContext
-              await Promise.all([fetchTransactions(), refreshUserAssets()]);
+              // Refresh both transactions and asset data
+              await Promise.all([
+                fetchTransactions(),
+                fetchUpdatedAsset(),
+                refreshUserAssets(),
+              ]);
 
               Alert.alert("Success", "Transaction deleted successfully");
             } catch (error) {
               console.error("Error deleting transaction:", error);
+              Alert.alert("Error", "Failed to delete transaction");
             } finally {
               setRefreshing(false);
             }
@@ -155,14 +217,14 @@ const AssetDetailScreen = ({ route, navigation }) => {
       >
         {/* Asset Header */}
         <AssetHeader
-          asset={assetWithRealTimeData}
+          asset={currentAsset}
           formatCurrency={formatCurrency}
           formatPercentage={formatPercentage}
         />
 
         {/* Asset Details Grid */}
         <AssetDetailsGrid
-          asset={assetWithRealTimeData}
+          asset={currentAsset}
           formatCurrency={formatCurrency}
         />
 

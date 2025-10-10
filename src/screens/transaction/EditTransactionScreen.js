@@ -19,16 +19,6 @@ const EditTransactionScreen = ({ route, navigation }) => {
 
     setLoading(true);
     try {
-      console.log("Updating transaction:", {
-        id: transaction.id,
-        old_type: transaction.transaction_type,
-        old_quantity: transaction.quantity,
-        old_price: transaction.price_per_unit,
-        new_type: updatedTransaction.transaction_type,
-        new_quantity: updatedTransaction.quantity,
-        new_price: updatedTransaction.price_per_unit,
-      });
-
       const { data, error } = await supabase
         .from("transactions")
         .update({
@@ -47,25 +37,6 @@ const EditTransactionScreen = ({ route, navigation }) => {
 
       if (error) throw error;
 
-      console.log("Transaction updated successfully:", data);
-
-      // Wait a moment for the trigger to execute
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Fetch the updated asset to verify trigger executed
-      const { data: updatedAsset, error: assetError } = await supabase
-        .from("user_assets")
-        .select("id, quantity, average_buy_price")
-        .eq("id", transaction.asset_id)
-        .single();
-
-      if (assetError) {
-        console.error("Error fetching updated asset:", assetError);
-      } else {
-        console.log("Updated asset after transaction:", updatedAsset);
-      }
-
-      // Force refresh user assets with fresh data
       await refreshUserAssets(true);
 
       Alert.alert(
@@ -80,23 +51,10 @@ const EditTransactionScreen = ({ route, navigation }) => {
       );
     } catch (error) {
       console.error("Error updating transaction:", error);
-
-      if (error.code === "23514") {
-        Alert.alert(
-          "Error",
-          "Invalid transaction data. Please check that all values are valid."
-        );
-      } else if (
-        error.message &&
-        error.message.includes("Insufficient quantity")
-      ) {
-        Alert.alert("Error", error.message);
-      } else {
-        Alert.alert(
-          "Error",
-          error.message || "Failed to update transaction. Please try again."
-        );
-      }
+      Alert.alert(
+        "Error",
+        error.message || "Failed to update transaction. Please try again."
+      );
     } finally {
       setLoading(false);
     }
