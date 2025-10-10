@@ -59,7 +59,9 @@ const AddTransactionScreen = ({ route, navigation }) => {
   };
 
   const handleCancel = () => {
-    navigation.goBack();
+    if (!loading) {
+      navigation.goBack();
+    }
   };
 
   return (

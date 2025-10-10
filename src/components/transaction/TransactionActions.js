@@ -26,7 +26,9 @@ const TransactionActions = ({
             disabled={loading}
             activeOpacity={0.7}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText}>
+              {loading ? "Cancelling..." : "Cancel"}
+            </Text>
           </TouchableOpacity>
         )}
 
