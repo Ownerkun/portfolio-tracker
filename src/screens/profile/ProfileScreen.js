@@ -10,7 +10,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../../AuthContext";
 
-const ProfileScreen = () => {
+const ProfileScreen = ({navigation}) => {
   const { user, profile, signOut } = useAuth();
 
   const handleLogout = () => {
@@ -45,23 +45,27 @@ const ProfileScreen = () => {
           <Text style={styles.email}>{user?.email}</Text>
         </View>
 
-        {/* Account Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
+       {/* Account Section */}
+<View style={styles.section}>
+  <Text style={styles.sectionTitle}>Account</Text>
 
-          <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
-            <View style={styles.menuIconContainer}>
-              <MaterialIcons name="edit" size={20} color="#3B82F6" />
-            </View>
-            <View style={styles.menuContent}>
-              <Text style={styles.menuText}>Edit Profile</Text>
-              <Text style={styles.menuSubtext}>
-                Update your personal information
-              </Text>
-            </View>
-            <MaterialIcons name="chevron-right" size={20} color="#CED4DA" />
-          </TouchableOpacity>
-        </View>
+  <TouchableOpacity 
+    style={styles.menuItem} 
+    activeOpacity={0.7}
+    onPress={() => navigation.navigate("EditPro")} // เพิ่มบรรทัดนี้
+  >
+    <View style={styles.menuIconContainer}>
+      <MaterialIcons name="edit" size={20} color="#3B82F6" />
+    </View>
+    <View style={styles.menuContent}>
+      <Text style={styles.menuText}>Edit Profile</Text>
+      <Text style={styles.menuSubtext}>
+        Update your personal information
+      </Text>
+    </View>
+    <MaterialIcons name="chevron-right" size={20} color="#CED4DA" />
+  </TouchableOpacity>
+</View>
 
         {/* Preferences Section */}
         <View style={styles.section}>
@@ -124,6 +128,7 @@ const ProfileScreen = () => {
   );
 };
 
+// Styles เดิมทั้งหมด (ไม่ต้องแก้ไข)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
