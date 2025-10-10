@@ -16,13 +16,13 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useAuth } from "../../AuthContext";
 import { supabase } from "../../services/supabase/supabase";
 
 const EditProfileScreen = ({ navigation }) => {
   const { user, profile, updateProfile } = useAuth();
-  
+
   // State for user data
   const [formData, setFormData] = useState({
     username: "",
@@ -62,10 +62,14 @@ const EditProfileScreen = ({ navigation }) => {
   const pickImage = async () => {
     try {
       // Request gallery permissions
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (status !== 'granted') {
-        Alert.alert('Permission Required', 'App needs access to your photo library to change profile picture');
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "App needs access to your photo library to change profile picture"
+        );
         return;
       }
 
@@ -74,15 +78,15 @@ const EditProfileScreen = ({ navigation }) => {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.7,
+        quality: 0.8,
       });
 
       if (!result.canceled && result.assets && result.assets[0].uri) {
         await uploadAvatar(result.assets[0].uri);
       }
     } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to select image');
+      console.error("Error picking image:", error);
+      Alert.alert("Error", "Failed to select image");
     }
   };
 
@@ -91,37 +95,68 @@ const EditProfileScreen = ({ navigation }) => {
     try {
       setUploading(true);
 
-      // Convert image to blob
-      const response = await fetch(uri);
-      const blob = await response.blob();
+      // Generate file name with user ID folder structure
+      const fileExt = uri.split(".").pop() || "jpg";
+      const fileName = `avatar.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`; // User ID as folder
 
-      // Generate unique file name
-      const fileExt = uri.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      console.log("Uploading avatar:", filePath);
+
+      // Use FormData approach
+      const formData = new FormData();
+      formData.append("file", {
+        uri: uri,
+        name: fileName,
+        type: `image/${fileExt}`,
+      });
 
       // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, blob, { upsert: true });
+      const { data, error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, formData, {
+          contentType: `image/${fileExt}`,
+          upsert: true,
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Supabase upload error:", uploadError);
+        throw uploadError;
+      }
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
+
+      console.log("Avatar uploaded successfully:", publicUrl);
 
       // Update state with new URL
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        avatar_url: publicUrl
+        avatar_url: publicUrl,
       }));
 
-      Alert.alert('Success', 'Profile picture updated successfully!');
+      Alert.alert("Success", "Profile picture updated successfully!");
     } catch (error) {
-      console.error('Error uploading avatar:', error);
-      Alert.alert('Error', 'Failed to upload profile picture');
+      console.error("Error uploading avatar:", error);
+
+      // Handle specific errors
+      if (error.message?.includes("row-level security")) {
+        Alert.alert(
+          "Error",
+          "Upload permission denied. Please check storage policies or try logging out and back in."
+        );
+      } else if (error.message?.includes("Bucket not found")) {
+        Alert.alert(
+          "Error",
+          "Storage bucket not found. Please check Supabase configuration."
+        );
+      } else {
+        Alert.alert(
+          "Error",
+          "Failed to upload profile picture: " + error.message
+        );
+      }
     } finally {
       setUploading(false);
     }
@@ -131,16 +166,16 @@ const EditProfileScreen = ({ navigation }) => {
   const removeAvatar = async () => {
     try {
       setUploading(true);
-      
-      setFormData(prev => ({
+
+      setFormData((prev) => ({
         ...prev,
-        avatar_url: ""
+        avatar_url: "",
       }));
 
-      Alert.alert('Success', 'Profile picture removed successfully');
+      Alert.alert("Success", "Profile picture removed successfully");
     } catch (error) {
-      console.error('Error removing avatar:', error);
-      Alert.alert('Error', 'Failed to remove profile picture');
+      console.error("Error removing avatar:", error);
+      Alert.alert("Error", "Failed to remove profile picture");
     } finally {
       setUploading(false);
     }
@@ -149,22 +184,22 @@ const EditProfileScreen = ({ navigation }) => {
   // Function to handle date change
   const onDateChange = (event, date) => {
     setShowDatePicker(false);
-    
+
     if (date) {
       setSelectedDate(date);
-      const formattedDate = date.toISOString().split('T')[0];
-      setFormData(prev => ({
+      const formattedDate = date.toISOString().split("T")[0];
+      setFormData((prev) => ({
         ...prev,
-        birth_date: formattedDate
+        birth_date: formattedDate,
       }));
     }
   };
 
   // Function to handle input changes
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -176,21 +211,29 @@ const EditProfileScreen = ({ navigation }) => {
       return;
     }
 
-    // Convert income to number
-    const incomeValue = formData.income ? parseFloat(formData.income) : null;
+    // Convert income to number (handle empty string)
+    const incomeValue =
+      formData.income && formData.income.trim() !== ""
+        ? parseFloat(formData.income.replace(/,/g, ""))
+        : null;
 
     try {
       setLoading(true);
-      
-      // Update data in database
-      const { error } = await updateProfile({
+
+      // Prepare update data
+      const updateData = {
         username: formData.username.trim(),
-        full_name: formData.full_name.trim(),
-        avatar_url: formData.avatar_url,
-        birth_date: formData.birth_date,
-        job_title: formData.job_title.trim(),
+        full_name: formData.full_name.trim() || null,
+        avatar_url: formData.avatar_url || null,
+        birth_date: formData.birth_date || null,
+        job_title: formData.job_title.trim() || null,
         income: incomeValue,
-      });
+      };
+
+      console.log("Updating profile with:", updateData);
+
+      // Update data in database
+      const { error } = await updateProfile(updateData);
 
       if (error) throw error;
 
@@ -202,7 +245,7 @@ const EditProfileScreen = ({ navigation }) => {
       ]);
     } catch (error) {
       console.error("Update profile error:", error);
-      Alert.alert("Error", "Failed to update profile");
+      Alert.alert("Error", error.message || "Failed to update profile");
     } finally {
       setLoading(false);
     }
@@ -210,54 +253,84 @@ const EditProfileScreen = ({ navigation }) => {
 
   // Function to format income numbers
   const formatIncome = (value) => {
+    if (!value || value.trim() === "") return "";
+
     // Remove commas before calculation
-    const cleanValue = value.replace(/,/g, '');
-    
-    if (cleanValue === '') return '';
-    
+    const cleanValue = value.replace(/,/g, "");
+
     // Convert to number and format with commas
     const number = parseFloat(cleanValue);
     if (isNaN(number)) return value;
-    
-    return number.toLocaleString('en-US');
+
+    return number.toLocaleString("en-US");
+  };
+
+  const handleIncomeChange = (value) => {
+    // Remove all non-numeric characters except decimal point
+    const numericValue = value.replace(/[^\d.]/g, "");
+
+    // Ensure only one decimal point
+    const parts = numericValue.split(".");
+    if (parts.length > 2) {
+      return; // Invalid input, don't update
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      income: numericValue,
+    }));
   };
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
+        <TouchableOpacity
+          style={styles.backButton}
           onPress={() => navigation.goBack()}
+          disabled={loading}
         >
           <MaterialIcons name="arrow-back" size={24} color="#1A1A1A" />
         </TouchableOpacity>
         <Text style={styles.title}>Edit Profile</Text>
-        <TouchableOpacity 
-          style={styles.saveButton} 
+        <TouchableOpacity
+          style={styles.saveButton}
           onPress={handleSave}
-          disabled={loading}
+          disabled={loading || !formData.username.trim()}
         >
           {loading ? (
             <ActivityIndicator size="small" color="#6200EA" />
           ) : (
-            <Text style={styles.saveButtonText}>Save</Text>
+            <Text
+              style={[
+                styles.saveButtonText,
+                !formData.username.trim() && { color: "#9CA3AF" },
+              ]}
+            >
+              Save
+            </Text>
           )}
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Profile Picture Section */}
         <View style={styles.avatarSection}>
           <View style={styles.avatarContainer}>
             {formData.avatar_url ? (
-              <Image source={{ uri: formData.avatar_url }} style={styles.avatar} />
+              <Image
+                source={{ uri: formData.avatar_url }}
+                style={styles.avatar}
+              />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <MaterialIcons name="person" size={48} color="#3B82F6" />
               </View>
             )}
-            
+
             {uploading && (
               <View style={styles.avatarOverlay}>
                 <ActivityIndicator size="large" color="#FFFFFF" />
@@ -266,25 +339,27 @@ const EditProfileScreen = ({ navigation }) => {
           </View>
 
           <View style={styles.avatarButtons}>
-            <TouchableOpacity 
-              style={styles.avatarButton} 
+            <TouchableOpacity
+              style={styles.avatarButton}
               onPress={pickImage}
-              disabled={uploading}
+              disabled={uploading || loading}
             >
               <MaterialIcons name="photo-camera" size={20} color="#3B82F6" />
               <Text style={styles.avatarButtonText}>
                 {formData.avatar_url ? "Change Photo" : "Add Photo"}
               </Text>
             </TouchableOpacity>
-            
+
             {formData.avatar_url && (
-              <TouchableOpacity 
-                style={[styles.avatarButton, styles.removeButton]} 
+              <TouchableOpacity
+                style={[styles.avatarButton, styles.removeButton]}
                 onPress={removeAvatar}
-                disabled={uploading}
+                disabled={uploading || loading}
               >
                 <MaterialIcons name="delete" size={20} color="#EF4444" />
-                <Text style={[styles.avatarButtonText, styles.removeButtonText]}>
+                <Text
+                  style={[styles.avatarButtonText, styles.removeButtonText]}
+                >
                   Remove
                 </Text>
               </TouchableOpacity>
@@ -300,9 +375,10 @@ const EditProfileScreen = ({ navigation }) => {
             <TextInput
               style={styles.input}
               value={formData.username}
-              onChangeText={(value) => handleInputChange('username', value)}
+              onChangeText={(value) => handleInputChange("username", value)}
               placeholder="Enter your username"
               placeholderTextColor="#9CA3AF"
+              editable={!loading}
             />
           </View>
 
@@ -312,20 +388,26 @@ const EditProfileScreen = ({ navigation }) => {
             <TextInput
               style={styles.input}
               value={formData.full_name}
-              onChangeText={(value) => handleInputChange('full_name', value)}
+              onChangeText={(value) => handleInputChange("full_name", value)}
               placeholder="Enter your full name"
               placeholderTextColor="#9CA3AF"
+              editable={!loading}
             />
           </View>
 
           {/* Birth Date */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Birth Date</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.dateInput}
               onPress={() => setShowDatePicker(true)}
+              disabled={loading}
             >
-              <Text style={formData.birth_date ? styles.dateText : styles.placeholderText}>
+              <Text
+                style={
+                  formData.birth_date ? styles.dateText : styles.placeholderText
+                }
+              >
                 {formData.birth_date || "Select birth date"}
               </Text>
               <MaterialIcons name="calendar-today" size={20} color="#6B7280" />
@@ -338,9 +420,10 @@ const EditProfileScreen = ({ navigation }) => {
             <TextInput
               style={styles.input}
               value={formData.job_title}
-              onChangeText={(value) => handleInputChange('job_title', value)}
+              onChangeText={(value) => handleInputChange("job_title", value)}
               placeholder="Enter your job title"
               placeholderTextColor="#9CA3AF"
+              editable={!loading}
             />
           </View>
 
@@ -350,12 +433,13 @@ const EditProfileScreen = ({ navigation }) => {
             <TextInput
               style={styles.input}
               value={formData.income}
-              onChangeText={(value) => handleInputChange('income', value.replace(/,/g, ''))}
+              onChangeText={handleIncomeChange}
               placeholder="0"
               placeholderTextColor="#9CA3AF"
-              keyboardType="numeric"
+              keyboardType="decimal-pad"
+              editable={!loading}
             />
-            {formData.income && (
+            {formData.income && formData.income.trim() !== "" && (
               <Text style={styles.incomeFormatted}>
                 {formatIncome(formData.income)} THB
               </Text>
@@ -376,33 +460,37 @@ const EditProfileScreen = ({ navigation }) => {
       </ScrollView>
 
       {/* Date Picker Modal */}
-      {showDatePicker && (
-        <Modal
-          transparent={true}
-          animationType="slide"
-          visible={showDatePicker}
-          onRequestClose={() => setShowDatePicker(false)}
-        >
-          <View style={styles.datePickerContainer}>
-            <View style={styles.datePickerHeader}>
-              <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                <Text style={styles.datePickerCancel}>Cancel</Text>
-              </TouchableOpacity>
-              <Text style={styles.datePickerTitle}>Select Birth Date</Text>
-              <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                <Text style={styles.datePickerConfirm}>Done</Text>
-              </TouchableOpacity>
-            </View>
-            <DateTimePicker
-              value={selectedDate}
-              mode="date"
-              display="spinner"
-              onChange={onDateChange}
-              maximumDate={new Date()}
-            />
+      <Modal
+        transparent={true}
+        animationType="slide"
+        visible={showDatePicker}
+        onRequestClose={() => setShowDatePicker(false)}
+      >
+        <View style={styles.datePickerContainer}>
+          <View style={styles.datePickerHeader}>
+            <TouchableOpacity
+              onPress={() => setShowDatePicker(false)}
+              disabled={loading}
+            >
+              <Text style={styles.datePickerCancel}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={styles.datePickerTitle}>Select Birth Date</Text>
+            <TouchableOpacity
+              onPress={() => setShowDatePicker(false)}
+              disabled={loading}
+            >
+              <Text style={styles.datePickerConfirm}>Done</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
-      )}
+          <DateTimePicker
+            value={selectedDate}
+            mode="date"
+            display="spinner"
+            onChange={onDateChange}
+            maximumDate={new Date()}
+          />
+        </View>
+      </Modal>
     </View>
   );
 };

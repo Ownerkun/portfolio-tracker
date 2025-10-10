@@ -41,9 +41,9 @@ const AuthenticatedStack = () => {
         name="EditPro"
         component={EditProfileScreen}
         options={{
-        headerShown: true,
-        title: "EditProfile",
-        headerBackTitle: "Back",
+          headerShown: false,
+          title: "EditProfile",
+          headerBackTitle: "Back",
         }}
       />
       <Stack.Screen

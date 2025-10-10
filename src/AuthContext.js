@@ -160,6 +160,8 @@ export const AuthProvider = ({ children }) => {
     try {
       if (!user) throw new Error("No user logged in");
 
+      console.log("Updating profile with:", updates);
+
       const { data, error } = await supabase
         .from("profiles")
         .update({
@@ -172,6 +174,7 @@ export const AuthProvider = ({ children }) => {
 
       if (error) throw error;
 
+      console.log("Profile updated successfully:", data);
       setProfile(data);
       return { data, error: null };
     } catch (error) {

@@ -6,11 +6,12 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Image,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../../AuthContext";
 
-const ProfileScreen = ({navigation}) => {
+const ProfileScreen = ({ navigation }) => {
   const { user, profile, signOut } = useAuth();
 
   const handleLogout = () => {
@@ -39,33 +40,57 @@ const ProfileScreen = ({navigation}) => {
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <View style={styles.avatarContainer}>
-            <MaterialIcons name="person" size={48} color="#3B82F6" />
+            {profile?.avatar_url ? (
+              <Image
+                source={{ uri: profile.avatar_url }}
+                style={styles.avatar}
+                onError={(error) => console.log("Error loading avatar:", error)}
+              />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <MaterialIcons name="person" size={48} color="#3B82F6" />
+              </View>
+            )}
           </View>
           <Text style={styles.username}>{profile?.username || "User"}</Text>
           <Text style={styles.email}>{user?.email}</Text>
+
+          {/* Show additional profile info if available */}
+          {(profile?.full_name || profile?.job_title) && (
+            <View style={styles.profileInfo}>
+              {profile?.full_name && (
+                <Text style={styles.profileInfoText}>{profile.full_name}</Text>
+              )}
+              {profile?.job_title && (
+                <Text style={styles.profileInfoSubtext}>
+                  {profile.job_title}
+                </Text>
+              )}
+            </View>
+          )}
         </View>
 
-       {/* Account Section */}
-<View style={styles.section}>
-  <Text style={styles.sectionTitle}>Account</Text>
+        {/* Account Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
 
-  <TouchableOpacity 
-    style={styles.menuItem} 
-    activeOpacity={0.7}
-    onPress={() => navigation.navigate("EditPro")} // เพิ่มบรรทัดนี้
-  >
-    <View style={styles.menuIconContainer}>
-      <MaterialIcons name="edit" size={20} color="#3B82F6" />
-    </View>
-    <View style={styles.menuContent}>
-      <Text style={styles.menuText}>Edit Profile</Text>
-      <Text style={styles.menuSubtext}>
-        Update your personal information
-      </Text>
-    </View>
-    <MaterialIcons name="chevron-right" size={20} color="#CED4DA" />
-  </TouchableOpacity>
-</View>
+          <TouchableOpacity
+            style={styles.menuItem}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate("EditPro")}
+          >
+            <View style={styles.menuIconContainer}>
+              <MaterialIcons name="edit" size={20} color="#3B82F6" />
+            </View>
+            <View style={styles.menuContent}>
+              <Text style={styles.menuText}>Edit Profile</Text>
+              <Text style={styles.menuSubtext}>
+                Update your personal information
+              </Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={20} color="#CED4DA" />
+          </TouchableOpacity>
+        </View>
 
         {/* Preferences Section */}
         <View style={styles.section}>
@@ -128,7 +153,6 @@ const ProfileScreen = ({navigation}) => {
   );
 };
 
-// Styles เดิมทั้งหมด (ไม่ต้องแก้ไข)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -170,6 +194,20 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 2,
     borderColor: "#3B82F630",
+    overflow: "hidden",
+  },
+  avatar: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 48,
+  },
+  avatarPlaceholder: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 48,
+    backgroundColor: "#3B82F615",
+    justifyContent: "center",
+    alignItems: "center",
   },
   username: {
     fontSize: 24,
@@ -182,6 +220,22 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#6C757D",
     fontWeight: "500",
+    marginBottom: 8,
+  },
+  profileInfo: {
+    alignItems: "center",
+    marginTop: 8,
+  },
+  profileInfoText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1A1A1A",
+    marginBottom: 2,
+  },
+  profileInfoSubtext: {
+    fontSize: 14,
+    color: "#6C757D",
+    fontStyle: "italic",
   },
   section: {
     backgroundColor: "#FFFFFF",
