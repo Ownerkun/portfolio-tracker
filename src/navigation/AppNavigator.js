@@ -17,6 +17,7 @@ import AssetDetailScreen from "../screens/asset/AssetDetailScreen";
 import ProfileScreen from "../screens/profile/ProfileScreen";
 import AddAssetScreen from "../screens/asset/AddAssetScreen";
 import AddTransactionScreen from "../screens/transaction/AddTransactionScreen";
+import EditProfileScreen from "../screens/profile/EditProfileScreen";
 import EditTransactionScreen from "../screens/transaction/EditTransactionScreen";
 
 const Tab = createBottomTabNavigator();
@@ -34,6 +35,15 @@ const AuthenticatedStack = () => {
           headerShown: true,
           title: "Asset Details",
           headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name="EditPro"
+        component={EditProfileScreen}
+        options={{
+        headerShown: true,
+        title: "EditProfile",
+        headerBackTitle: "Back",
         }}
       />
       <Stack.Screen
